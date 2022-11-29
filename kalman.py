@@ -108,3 +108,20 @@ class Kalman:
         return self._x[4]
 
 
+# Initialize kalman filter
+xhat_pos = [0, 0, 0, 0] # Initial pose estimate
+xhat_att = [0, 0]       # Initial attitude estimate
+kf_pos = Kalman(init_x=xhat_pos, _acc_variance=0.5, _type="pose")
+kf_att = Kalman(init_x=xhat_att, _acc_variance=0.5, _type="orientation")
+
+meas_variance_pos = np.array([[0.01, 0],
+                              [0, 0.01]])
+meas_variance_vel = np.array([[0.01, 0],
+                              [0, 0.01]])
+meas_variance_att = np.array([0.001])
+meas_variance_omega = np.array([0.1])
+
+mus_pos = []
+covs_pos = []
+mus_att = []
+covs_att = []
