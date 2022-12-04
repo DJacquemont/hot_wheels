@@ -6,6 +6,10 @@ import math
 ## PARAMETERS ##
 
 goal = [10, 10]
+fieldWidthM = 0.841              # width of A0 sheet [m]
+fieldLengthM = 1.189             # length of A0 sheet [m]
+fieldWidthP = 480                # width of FoV camera [pixels]
+fieldLengthP = 640                # width of FoV camera [pixels]
 
  # POSITION - GREEN
 TLowPos = np.array([245,245,175])
@@ -61,6 +65,7 @@ def odoFetch(videoFeed):
 
     if np.shape(BlobPosCenter)[0] == 2: # Checking if the position was found
         robotPos = [BlobPosCenter[0][0]+(BlobPosCenter[1][0]-BlobPosCenter[0][0])/2, BlobPosCenter[0][1]+(BlobPosCenter[1][1]-BlobPosCenter[0][1])/2]
+        robotPos[0] = fieldLengthP - robotPos[0]
         robotPos = np.rint(robotPos).astype(np.int32)
         posIsFetch = True
 
@@ -77,15 +82,17 @@ def odoFetch(videoFeed):
 
         if np.shape(BlobDirCenter)[0] == 1: # Checking if the angle was found
             BlobDirCenter = [j for sub in BlobDirCenter for j in sub]
+            BlobDirCenter[0] = fieldLengthP - BlobDirCenter[0]
             angle = math.atan2(BlobDirCenter[1]-robotPos[1], BlobDirCenter[0]-robotPos[0])
             angleIsFetch = True
 
     # Combining position & angle
     if (angleIsFetch and posIsFetch) == True:
         odometry = np.append(robotPos, angle)
+        print("Odometry obtained")
         return odometry
     else:
-        print("Can not obtain odometry")
+        #print("Can not obtain odometry")
         return False
 
 
@@ -189,3 +196,13 @@ def liveFeedback(videoFeed, nodes, nodeCon, maskObsDilated):
         output = cv2.line(output, pos, endL, (0,255,0), 3)
 
     return output
+
+
+# Fetching odometry in meters
+def fetchOdoMeters(videoFeed):
+    try:
+        odoPix = odoFetch(videoFeed)
+        odoMet = odoPix[:2]*fieldWidthM/fieldWidthP
+        return np.array([odoMet[0], odoMet[1], odoPix[2]])
+    except:
+        return False

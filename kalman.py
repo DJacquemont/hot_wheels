@@ -1,10 +1,10 @@
 import numpy as np
 import pygame as pg
-
+import vision
 
 def move(_x, _y, psi, w, h, obj, surface):
-    x = int(w/2 + _x*1000 - 25)
-    y = int(h/2 - _y*1000 - 25)
+    x = int(_x*1000-25)
+    y = int(h-_y*1000-25)
     thymio = pg.transform.rotate(obj, psi*180/np.pi)
     surface.blit(thymio, (x, y))
 
@@ -12,22 +12,48 @@ def move(_x, _y, psi, w, h, obj, surface):
 def drawLine(_x, _y, w, h, surface):
     count = 1
     while count < 300 and count <= len(_x):
-        x = int(w/2 + _x[len(_x)-count]*1000)
-        y = int(h/2 - _y[len(_x)-count]*1000)
+        x = int(_x[len(_x)-count]*1000)
+        y = int(h - _y[len(_x)-count]*1000)
         surface.fill((int(255-255/300*count), 0, 0), ((x, y), (3, 3)))
         count += 1
 
 
 class Kalman:
-    def __init__(self,  init_x: list, _acc_variance: float, _type) -> None:
+    def __init__(self, _acc_variance: float, _type, init_x=False, videoFeed=False) -> None:
         self.type = _type
 
         # mean of state GRV
-        self._x = np.array(init_x)
+        if not init_x:
+            if videoFeed:
+                fetched = False
+                i = 0
+                while (not fetched) and (i < 1000):
+                    odoMet = vision.fetchOdoMeters(videoFeed)
+                    if type(odoMet) != bool:
+                        pos = odoMet[0:2]
+                        pos[0] = pos[0]
+                        angle = odoMet[2]
+                        fetched = True
+                    i += 1
+                if _type == "pose":
+                    try:
+                        self._x = np.hstack((pos, np.array([0, 0])))
+                    except:
+                        print("Did not find position")
+                elif _type == "orientation":
+                    try:
+                        self._x = np.array([angle, 0])
+                    except:
+                        print("Did not find angle")
+            else:
+                print("Initial conditions or video feed needs to be specified.")
+        else:
+            self._x = np.array(init_x)
+
         self._acc_variance = _acc_variance
 
         # covariance of state GRV
-        self._P = 0*np.eye(len(init_x))
+        self._P = 0*np.eye(len(self._x))
 
     def predict(self, dt: float) -> None:
         # x = Ax
@@ -109,19 +135,10 @@ class Kalman:
 
 
 # Initialize kalman filter
-xhat_pos = [0, 0, 0, 0] # Initial pose estimate
-xhat_att = [0, 0]       # Initial attitude estimate
-kf_pos = Kalman(init_x=xhat_pos, _acc_variance=0.5, _type="pose")
-kf_att = Kalman(init_x=xhat_att, _acc_variance=0.5, _type="orientation")
-
-meas_variance_pos = np.array([[0.01, 0],
-                              [0, 0.01]])
-meas_variance_vel = np.array([[0.01, 0],
-                              [0, 0.01]])
+meas_variance_pos = np.array([[0.001, 0],
+                              [0, 0.001]])
+meas_variance_vel = np.array([[0.1, 0],
+                              [0, 0.1]])
 meas_variance_att = np.array([0.001])
 meas_variance_omega = np.array([0.1])
 
-mus_pos = []
-covs_pos = []
-mus_att = []
-covs_att = []
