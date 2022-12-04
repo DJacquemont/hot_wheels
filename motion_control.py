@@ -104,7 +104,7 @@ class Trajectory:
         self.total_len = np.sum([points[idx].dist(points[idx+1]) for idx in range(len(points)-1)])
                 
 class MotionControl:
-    def __init__(self, traj, x_pos, y_pos, angle, err_dist=1, err_angle=np.pi/2
+    def __init__(self, traj, x_pos, y_pos, angle, err_dist=2, err_angle=np.pi/8
     ):
         '''
         The MotionControl class allows to compute the speed of the wheel motors, it has:
@@ -150,9 +150,9 @@ class MotionControl:
         angle_off = des_angle - self.robot_ori       # difference between desired angle and current orientation of the robot
         
         # TUNE PARAMETERS
-        K_dist = 0.004
-        K_ori = 5
-        speed_offset = 4 # [cm/s]
+        K_dist = 0.01
+        K_ori = 2
+        speed_offset = 3 # [cm/s]
 
         self.l_speed = SPEED_RATIO * (speed_offset + K_dist*dist_off - K_ori*angle_off) #go faster if angle is negative
         self.r_speed = SPEED_RATIO * (speed_offset + K_dist*dist_off + K_ori*angle_off) #go faster if angle is positive
