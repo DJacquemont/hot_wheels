@@ -57,10 +57,11 @@ def odoFetch(videoFeed):
     maskPos = cv2.inRange(frame, TLowPos, THighPos)
     totalLabelsPos, _, statsPos, BlobPos = cv2.connectedComponentsWithStats(maskPos, connectivity=8)
 
+    #print(statsPos[:, cv2.CC_STAT_AREA] )
     BlobPosCenter = []
     for i in range(1, totalLabelsPos):
         areaBlobPos = statsPos[i, cv2.CC_STAT_AREA] 
-        if (areaBlobPos > 150) and (areaBlobPos < 400): # Size of the desired blobs
+        if (areaBlobPos > 130) and (areaBlobPos < 400): # Size of the desired blobs
             BlobPosCenter.append(BlobPos[i])
 
     if np.shape(BlobPosCenter)[0] == 2: # Checking if the position was found
@@ -74,10 +75,11 @@ def odoFetch(videoFeed):
         maskDir = cv2.inRange(frame, TLowDir, THighDir)
         totalLabelsDir, _, statsDir, BlobDir = cv2.connectedComponentsWithStats(maskDir, connectivity=8)
 
+        #print(statsDir[:, cv2.CC_STAT_AREA])
         BlobDirCenter = []
         for i in range(1, totalLabelsDir):
             areaBlobDir = statsDir[i, cv2.CC_STAT_AREA] 
-            if (areaBlobDir > 30) and (areaBlobDir < 150): # Size of the desired blobs
+            if (areaBlobDir > 25) and (areaBlobDir < 150): # Size of the desired blobs
                 BlobDirCenter.append(BlobDir[i])
 
         if np.shape(BlobDirCenter)[0] == 1: # Checking if the angle was found
