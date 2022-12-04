@@ -11,10 +11,10 @@ def move(_x, _y, psi, w, h, obj, surface):
 
 def drawLine(_x, _y, w, h, surface):
     count = 1
-    while count < 300 and count <= len(_x):
+    while count < 1000 and count <= len(_x):
         x = int(_x[len(_x)-count]*1000)
         y = int(h - _y[len(_x)-count]*1000)
-        surface.fill((int(255-255/300*count), 0, 0), ((x, y), (3, 3)))
+        surface.fill((int(255-255/1000*count), 0, 0), ((x, y), (3, 3)))
         count += 1
 
 
@@ -31,7 +31,6 @@ class Kalman:
                     odoMet = vision.fetchOdoMeters(videoFeed)
                     if type(odoMet) != bool:
                         pos = odoMet[0:2]
-                        pos[0] = pos[0]
                         angle = odoMet[2]
                         fetched = True
                     i += 1
