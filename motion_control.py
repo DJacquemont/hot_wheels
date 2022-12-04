@@ -1,6 +1,40 @@
 '''
-MOTION CONTROL v1.1
- -- commented classes
+MOTION CONTROL v1.2
+
+-------- HOW TO USE ------
+First declare a Motion Control instance with optimal trajectory to follow and actual state of the robot
+    mc = MotionControl(opt_traj, x_pos, y_pos, angle, err_dist=1, err_angle=np.pi/100):
+
+Then update the robot's wheel speed (left and right) by calling one of the following
+    mc.update_global(self, x_pos, y_pos, ori)
+    mc.update_local(self, sensors)
+
+These functions return nothing, but update the attributes of the robot:
+    thymio_l_speed = mc.l_speed
+    thymio_r_speed = mc.r_speed
+----------  END ----------
+
+------ HOW IT WORKS ------
+The optimal trajectory is a list of Node instances. A Node has an id, a x and a y position.
+The opt_traj looks the following :
+
+    [Node(0,10,10), Node(1, 25, 20), Node(2, 25, 30)]
+           |               |                |
+      First node      Second Node       Goal Node
+
+The motion control instance has a robot position attribute as the following:
+    robot_pos = Node(id, x_pos, y_pos)
+    robot_ori = angle
+with.
+    id : the actual node of the opt_traj
+    x,y : positions
+    angle : orientation of the robot
+
+When calling update functions we compute the speed of the wheels regarding
+the distance of the robot to the Node with the next id in the opt_traj. If the robot is
+within a small circle around the next Node, the id of the robot_pos increments by 1 to
+track the next Node in opt_traj.
+----------  END ----------
 
 inputs:
     opt_traj - a list of optimal points to follow
@@ -63,14 +97,14 @@ class Trajectory:
     def __init__(self, points):
         '''
         A Trajectory is a sequence of nodes, it has:
-            points - numpy array of nodes
+            points - numpy array of Node instances
             total_len - totol distance of the trajectory
         '''
         self.points = np.array(points)
         self.total_len = np.sum([points[idx].dist(points[idx+1]) for idx in range(len(points)-1)])
                 
 class MotionControl:
-    def __init__(self, opt_traj, x_pos, y_pos, angle, err_dist=5, err_angle=np.pi/8):
+    def __init__(self, traj, x_pos, y_pos, angle, err_dist=1, err_angle=np.pi/100):
         '''
         The MotionControl class allows to compute the speed of the wheel motors, it has:
             opt_traj - the optimal trajectory to follow
@@ -84,7 +118,13 @@ class MotionControl:
             l_speed - computed speed of the left wheel [aseba unit]
             r_speed - computed speed of the right wheel [aseba unit]
         '''
-        self.opt_traj = opt_traj
+        self.opt_traj = Trajectory([])
+        i=0
+        for pos in traj:
+            x = pos[0]
+            y = pos[1]
+            self.opt_traj.points = np.append(self.opt_traj.points, Node(i,x,y))
+            i+=1
         self.robot_pos = Node(0, x_pos, y_pos)
         self.robot_ori = angle
         self.err_dist = err_dist
