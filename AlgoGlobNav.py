@@ -50,11 +50,11 @@ class Edge:
 # In[3]:
 
 
-def initNodes(input):
+def initNodes(inputN):
 
-	Nodes = len(nodes)*[0]      
-	for i in range(len(nodes)):
-		Nodes[i] = Point(nodes[i][0],nodes[i][1])
+	Nodes = len(inputN)*[0]      
+	for i in range(len(Nodes)):
+		Nodes[i] = Point(inputN[i][0],inputN[i][1])
 	return Nodes
 
 def initEdges(inputN,inputE):
