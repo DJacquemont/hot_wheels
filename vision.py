@@ -213,7 +213,7 @@ def terrainFetch(videoFeed):
 
 
 # Display terrain
-def liveFeedback(videoFeed, nodes, nodeCon, maskObsDilated):
+def liveFeedback(videoFeed, nodes, nodeCon, maskObsDilated, optPath):
     frame = frameReader(videoFeed)
     if type(frame) == bool:
         return False
@@ -231,6 +231,10 @@ def liveFeedback(videoFeed, nodes, nodeCon, maskObsDilated):
     for con in nodeCon:
         output = cv2.line(output, [fieldLengthP - nodes[con[0]][0], nodes[con[0]][1]],
                           [fieldLengthP - nodes[con[1]][0], nodes[con[1]][1]], (255,0,0), 1)
+    
+    for i in range(len(optPath)-1):
+        output = cv2.line(output,[fieldLengthP - optPath[i][0],optPath[i][1]],
+                          [fieldLengthP - optPath[i+1][0],optPath[i+1][1]],(255, 0, 0),10)
     
     goal = nodes[-1,:]
     output = cv2.circle(output, [fieldLengthP - goal[0], goal[1]], 5, (0, 255, 255), -1)
