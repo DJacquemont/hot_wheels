@@ -104,7 +104,7 @@ class Trajectory:
         self.total_len = np.sum([points[idx].dist(points[idx+1]) for idx in range(len(points)-1)])
                 
 class MotionControl:
-    def __init__(self, traj, x_pos, y_pos, angle, err_dist=2, err_angle=np.pi/8
+    def __init__(self, traj, x_pos, y_pos, angle, err_dist=3, err_angle=np.pi/4
     ):
         '''
         The MotionControl class allows to compute the speed of the wheel motors, it has:
@@ -150,8 +150,8 @@ class MotionControl:
         angle_off = des_angle - self.robot_ori       # difference between desired angle and current orientation of the robot
         
         # TUNE PARAMETERS
-        K_dist = 0.01
-        K_ori = 2
+        K_dist = 0.04
+        K_ori = 5
         speed_offset = 3 # [cm/s]
 
         self.l_speed = SPEED_RATIO * (speed_offset + K_dist*dist_off - K_ori*angle_off) #go faster if angle is negative
@@ -170,8 +170,10 @@ class MotionControl:
 
         '''
         des_angle = self.robot_pos.join_angle(next_point)
-        angle_off = des_angle - self.robot_ori
-        
+        angle_off = (des_angle - self.robot_ori)
+        angle_off = angle_off if (angle_off > -np.pi) and (angle_off < np.pi) else \
+                    angle_off - 2 * np.pi if (angle_off > np.pi) else \
+                    angle_off + 2 * np.pi
         # TUNE PARAMETERS
         K_piv = 1
         speed_offset = 1 # [cm/s]
@@ -222,13 +224,13 @@ class MotionControl:
 
         # Every time the prox event is generated, the robot go back accordingly 
         # of what is sensed on the middle front proximity sensor
-        lspeed_os = 100
-        rspeed_os = 100
+        lspeed_os = 60
+        rspeed_os = 60
         yl = 0
         yr = 0
 
-        wl = [-5,-5,-5,-2,-1,0,0]
-        wr = [+5,+5,+5,+2,+1,0,0]
+        wl = [-2,-2,-2,-2,-0.5,0,0]
+        wr = [+4,+4,+3,+2,+1,0,0]
 
         for i in range(7):
             # Compute outputs of neurons and set motor powers

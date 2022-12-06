@@ -74,7 +74,7 @@ def dijkstra(inputNodes,inputeEdges,index_goal):
     #Initilization of objects and tab
     Edges = initEdges(inputNodes,inputeEdges)
     Nodes = initNodes(inputNodes)
-    tabLenPath = len(nodes)*[float('inf')]
+    tabLenPath = len(Nodes)*[float('inf')]
     tabPath = [ [] for _ in range(len(Nodes))]
     tabIndex = {(k.x,k.y): v for v, k in enumerate(Nodes)}
 
@@ -124,11 +124,11 @@ def dijkstra(inputNodes,inputeEdges,index_goal):
         act_node = Nodes[idx_min]
         act_path = tabPath[idx_min]
 	
-	optPath = tabPath[index_goal]
-    	output = [[0,0] for _ in range(len(optPath))]
-   	for i in range(len(output)):
-       		output[i][0]= optPath[i].x
-        	output[i][1]= optPath[i].y
+    optPath = tabPath[index_goal]
+    output = [[0,0] for _ in range(len(optPath))]
+    for i in range(len(output)):
+            output[i][0]= optPath[i].x
+            output[i][1]= optPath[i].y
 
     return output
 

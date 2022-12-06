@@ -76,8 +76,6 @@ def odoFetch(videoFeed):
         robotPos[0] = fieldLengthP - robotPos[0]
         robotPos = np.rint(robotPos).astype(np.int32)
         posIsFetch = True
-    else:
-        print("Can not find position : ", statsPos[:, cv2.CC_STAT_AREA] )
 
     if posIsFetch:
         # Fetching Direction
@@ -107,15 +105,12 @@ def odoFetch(videoFeed):
             BlobDirCenter[0] = fieldLengthP - BlobDirCenter[0]
             angle = math.atan2(BlobDirCenter[1]-robotPos[1], BlobDirCenter[0]-robotPos[0])
             angleIsFetch = True
-        else:
-            print("Can not find angle : ", statsDir[:, cv2.CC_STAT_AREA] )
 
     # Combining position & angle
     if (angleIsFetch and posIsFetch) == True:
         odometry = np.append(robotPos, angle)
         return odometry
     else:
-        print("Can not find robot position and/or angle")
         return False
 
     
@@ -132,7 +127,7 @@ def goalFetch(videoFeed):
     BlobGoalCenter = []
     for i in range(1, totalLabelsGoal):
         areaBlobGoal = statsGoal[i, cv2.CC_STAT_AREA] 
-        if (areaBlobGoal > 150) and (areaBlobGoal < 550): # Size of the desired blobs
+        if (areaBlobGoal > 100) and (areaBlobGoal < 550): # Size of the desired blobs
             BlobGoalCenter.append(BlobGoal[i])
 
     if np.shape(BlobGoalCenter)[0] == 1:
@@ -161,7 +156,7 @@ def terrainFetch(videoFeed):
             componentMask = (labelIdObs == i).astype("uint8") * 255
             maskObs = cv2.bitwise_or(maskObs, componentMask) 
 
-    maskObsDilated = cv2.dilate(maskObs, SE, iterations = 10)
+    maskObsDilated = cv2.dilate(maskObs, SE, iterations = 23)
     maskObsMargin = cv2.dilate(maskObsDilated, SE, iterations = 5)
 
     dst = cv2.cornerHarris(maskObsMargin,20,3,0.04) # Fetching the angles
