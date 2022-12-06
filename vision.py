@@ -76,6 +76,8 @@ def odoFetch(videoFeed):
         robotPos[0] = fieldLengthP - robotPos[0]
         robotPos = np.rint(robotPos).astype(np.int32)
         posIsFetch = True
+    else:
+        print("Can not find position : ", statsPos[:, cv2.CC_STAT_AREA] )
 
     if posIsFetch:
         # Fetching Direction
@@ -84,17 +86,29 @@ def odoFetch(videoFeed):
 
         #print(statsDir[:, cv2.CC_STAT_AREA])
         BlobDirCenter = []
+        goodBlobsIdx = []
         for i in range(1, totalLabelsDir):
             areaBlobDir = statsDir[i, cv2.CC_STAT_AREA] 
             #if (areaBlobDir > 25) and (areaBlobDir < 150): # Size of the desired blobs
-            if (areaBlobDir > 18) and (areaBlobDir < 40): # Size of the desired blobs
+            if (areaBlobDir > 10) and (areaBlobDir < 40): # Size of the desired blobs
                 BlobDirCenter.append(BlobDir[i])
+                goodBlobsIdx.append(i)
 
         if np.shape(BlobDirCenter)[0] == 1: # Checking if the angle was found
             BlobDirCenter = [j for sub in BlobDirCenter for j in sub]
             BlobDirCenter[0] = fieldLengthP - BlobDirCenter[0]
             angle = math.atan2(BlobDirCenter[1]-robotPos[1], BlobDirCenter[0]-robotPos[0])
             angleIsFetch = True
+        elif ((np.shape(BlobDirCenter)[0] <= 3) and (np.shape(BlobDirCenter)[0] > 1)) :
+            maxBlob = 0
+            for idx in goodBlobsIdx:
+                if (statsDir[idx, cv2.CC_STAT_AREA]>=maxBlob):
+                    BlobDirCenter = BlobDir[idx]
+            BlobDirCenter[0] = fieldLengthP - BlobDirCenter[0]
+            angle = math.atan2(BlobDirCenter[1]-robotPos[1], BlobDirCenter[0]-robotPos[0])
+            angleIsFetch = True
+        else:
+            print("Can not find angle : ", statsDir[:, cv2.CC_STAT_AREA] )
 
     # Combining position & angle
     if (angleIsFetch and posIsFetch) == True:
