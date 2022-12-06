@@ -123,8 +123,14 @@ def dijkstra(inputNodes,inputeEdges,index_goal):
         act_dist = tabLenPath[idx_min]
         act_node = Nodes[idx_min]
         act_path = tabPath[idx_min]
+	
+	optPath = tabPath[index_goal]
+    	output = [[0,0] for _ in range(len(optPath))]
+   	for i in range(len(output)):
+       		output[i][0]= optPath[i].x
+        	output[i][1]= optPath[i].y
 
-    return tabPath[index_goal]
+    return output
 
 
 # In[ ]:
