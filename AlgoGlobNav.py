@@ -1,15 +1,7 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 import numpy as np
 import math
 import heapq
-
-
-# In[2]:
+import vision
 
 
 class Point:
@@ -45,15 +37,13 @@ class Edge:
         return coordinates
 
 
-# In[3]:
-
-
 def initNodes(inputN):
 
 	Nodes = len(inputN)*[0]      
 	for i in range(len(Nodes)):
 		Nodes[i] = Point(inputN[i][0],inputN[i][1])
 	return Nodes
+
 
 def initEdges(inputN,inputE):
     Edges = 2*len(inputE)*[0]
@@ -64,9 +54,6 @@ def initEdges(inputN,inputE):
         Edges[2*i+1] =Edge(inputN[inputE[i][1]][0],inputN[inputE[i][1]][1],
                          inputN[inputE[i][0]][0],inputN[inputE[i][0]][1])
     return Edges
-
-
-# In[4]:
 
 
 def dijkstra(inputNodes,inputeEdges,index_goal): 
@@ -133,8 +120,15 @@ def dijkstra(inputNodes,inputeEdges,index_goal):
     return output
 
 
-# In[ ]:
-
+def opti_path(vid):
+	while(True):
+		terrain = vision.terrainFetch(vid)
+		if type(terrain) != bool:
+			nodes,nodeCon, maskObsDilated = terrain
+			break
+	optimal_pathP = dijkstra(nodes,nodeCon,-1)	
+	return np.array(optimal_pathP)*vision.fieldWidthM/vision.fieldWidthP
+		
 
 
 
