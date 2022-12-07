@@ -127,7 +127,7 @@ def opt_path(vid):
             nodes,nodeCon, maskObsDilated = terrain
             break
     optimal_path = dijkstra(node,nodeCon,-1)
-    return np.array(optimal_pathP)**vision.fieldWidthM/vision.fieldWidthP
+    return np.array(optimal_pathP)*vision.fieldWidthM/vision.fieldWidthP
 		
 
 
