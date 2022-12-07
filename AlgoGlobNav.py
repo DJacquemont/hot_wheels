@@ -120,14 +120,14 @@ def dijkstra(inputNodes,inputeEdges,index_goal):
     return output
 
 
-def opti_path(vid):
-	while(True):
-		terrain = vision.terrainFetch(vid)
-		if type(terrain) != bool:
-			nodes,nodeCon, maskObsDilated = terrain
-			break
-	optimal_pathP = dijkstra(nodes,nodeCon,-1)	
-	return np.array(optimal_pathP)*vision.fieldWidthM/vision.fieldWidthP
+def opt_path(vid):
+    while(True):
+        terrain = vision.terrainFetch(vid)
+        if type(terrain) != bool:
+            nodes,nodeCon, maskObsDilated = terrain
+            break
+    optimal_path = dijkstra(node,nodeCon,-1)
+    return np.array(optimal_pathP)**vision.fieldWidthM/vision.fieldWidthP
 		
 
 
