@@ -53,7 +53,7 @@ def dijkstra(inputNodes,inputeEdges,index_goal):
     #Initilization of objects and tab
     Edges = initEdges(inputNodes,inputeEdges)
     Nodes = inputNodes
-    tabLenPath = np.empty(len(nodes), dtype=float) 
+    tabLenPath = np.empty(len(Nodes), dtype=float) 
     tabLenPath[:] = float('inf')
     tabPath = [ [] for _ in range(len(Nodes))]
     tabIndex = {(k[0],k[1]): v for v, k in enumerate(Nodes)}
