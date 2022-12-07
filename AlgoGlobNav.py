@@ -21,12 +21,12 @@ class Edge:
         return np.sqrt((self.start.x - self.end.x)**2 + (self.start.y-self.end.y)**2)
 
     def compare_start(self,p2):
-        if(self.start.x == p2.x and self.start.y == p2.y):
+        if(self.start.x == p2[0] and self.start.y == p2[1]):
             return 1
         else:
             return 0
     def compare_end(self,p2):
-        if(self.end.x == p2.x and self.end.y == p2.y):
+        if(self.end.x == p2[0] and self.end.y == p2[1]):
             return 1
         else:
             return 0
@@ -37,16 +37,8 @@ class Edge:
         return coordinates
 
 
-def initNodes(inputN):
-
-	Nodes = len(inputN)*[0]      
-	for i in range(len(Nodes)):
-		Nodes[i] = Point(inputN[i][0],inputN[i][1])
-	return Nodes
-
-
 def initEdges(inputN,inputE):
-    Edges = 2*len(inputE)*[0]
+    Edges = np.empty(2*len(inputE),dtype = object)
     
     for i in range(len(inputE)):
         Edges[2*i] = Edge(inputN[inputE[i][0]][0],inputN[inputE[i][0]][1],
@@ -60,10 +52,11 @@ def dijkstra(inputNodes,inputeEdges,index_goal):
     
     #Initilization of objects and tab
     Edges = initEdges(inputNodes,inputeEdges)
-    Nodes = initNodes(inputNodes)
-    tabLenPath = len(Nodes)*[float('inf')]
+    Nodes = inputNodes
+    tabLenPath = np.empty(len(nodes), dtype=float) 
+    tabLenPath[:] = float('inf')
     tabPath = [ [] for _ in range(len(Nodes))]
-    tabIndex = {(k.x,k.y): v for v, k in enumerate(Nodes)}
+    tabIndex = {(k[0],k[1]): v for v, k in enumerate(Nodes)}
 
     #Initial condition
     act_node = Nodes[-2]
@@ -72,7 +65,7 @@ def dijkstra(inputNodes,inputeEdges,index_goal):
     iteration = 0
     
     #Check if all edges are used
-    while(len(Edges) != 0 or iteration > 200): 
+    while(len(Edges) != 0 ): 
         
         for edge in Edges:
             #Check if starting node of edge is actual node
@@ -89,14 +82,14 @@ def dijkstra(inputNodes,inputeEdges,index_goal):
                     if(len(tabPath[idx])== 0):
 
                         for i in act_path:
-                            tabPath[idx].append(i)
-                        tabPath[idx].append(edge.end)
+                            tabPath[idx].append([i[0],i[1]])
+                        tabPath[idx].append([edge.end.x,edge.end.y])
 
                     else:
                         tabPath[idx].clear()
                         for i in act_path:
-                            tabPath[idx].append(i)
-                        tabPath[idx].append(edge.end)
+                            tabPath[idx].append([i[0],i[1]])
+                        tabPath[idx].append([edge.end.x,edge.end.y])
                 else:
                     continue
         #Removing all used edge on the list
@@ -106,18 +99,12 @@ def dijkstra(inputNodes,inputeEdges,index_goal):
         iteration += 1
         min_dist = heapq.nsmallest(iteration,tabLenPath)
         min_dist = min_dist[-1]
-        idx_min = tabLenPath.index(min_dist)
+        idx_min  = int(np.where(tabLenPath == min_dist)[0])
         act_dist = tabLenPath[idx_min]
         act_node = Nodes[idx_min]
         act_path = tabPath[idx_min]
 	
-    optPath = tabPath[index_goal]
-    output = [[0,0] for _ in range(len(optPath))]
-    for i in range(len(output)):
-            output[i][0]= optPath[i].x
-            output[i][1]= optPath[i].y
-
-    return output
+    return np.array(tabPath[index_goal]
 
 
 def opt_path(vid):
@@ -127,7 +114,7 @@ def opt_path(vid):
             nodes,nodeCon, maskObsDilated = terrain
             break
     optimal_path = dijkstra(node,nodeCon,-1)
-    return np.array(optimal_pathP)*vision.fieldWidthM/vision.fieldWidthP
+    return optimal_pathP*vision.fieldWidthM/vision.fieldWidthP
 		
 
 
