@@ -209,6 +209,11 @@ class MotionControl:
             # if we just left the local avoidance algorithm, then we have to update the optimal path
             # before reseting the position index and turning back to the global algorithm
             if self.state == 'local':
+                self.opt_traj = Trajectory([])
+                i=0
+                for pos in opt_path:
+                    self.opt_traj.points = np.append(self.opt_traj.points, Node(i,pos[0],pos[1]))
+                    i+=1
                 self.opt_traj = opt_path
                 self.robot_pos.id = 0
             self.state = 'global'
@@ -257,7 +262,7 @@ class MotionControl:
         self.robot_pos.x = x_pos    # first of all, update the state of the robot
         self.robot_pos.y = y_pos
         self.robot_ori = ori
-        
+
         lspeed_os = 60
         rspeed_os = 60
         yl = 0
