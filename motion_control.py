@@ -204,7 +204,7 @@ class MotionControl:
         prox = prox[0:5]
         if any(prox):
             self.state = 'local'
-            self.update_local(x_pos, y_pos, ori, prox)
+            self.update_local(prox)
 
         # if the sensors dont detect anything, follow global algorithme
         else:
@@ -222,13 +222,13 @@ class MotionControl:
                     i+=1
                 self.robot_pos.id = 0
                 self.state = 'global'
-                self.update_global(x_pos, y_pos, ori)
+                self.update_global()
                 return nodes, nodeCon, maskObsDilated, opt_path
             else:
                 self.state = 'global'
-                self.update_global(x_pos,y_pos,ori)
+                self.update_global()
 
-    def update_global(self, x_pos, y_pos, ori):
+    def update_global(self):
         '''
         Updates the speed of the the robot wheels using the position of the robots in case we are in a GLOBAL path search
         Inputs:
@@ -238,10 +238,6 @@ class MotionControl:
             l_speed - speed for the left motor [aseba unit]
             r_speed - speed for the right motor [aseba unit]
         '''
-        self.robot_pos.x = x_pos    # first of all, update the state of the robot
-        self.robot_pos.y = y_pos
-        self.robot_ori = ori
-
         # if the goal point is reached --> stop the wheels 
         if self.robot_pos.dist(self.opt_traj.points[len(self.opt_traj.points)-1]) < self.err_dist: 
             self.l_speed, self.r_speed = 0, 0
@@ -259,7 +255,7 @@ class MotionControl:
             else:
                 self.move_fwd(next_point)   # else go forward the next point
                 
-    def update_local(self, x_pos, y_pos, ori, prox):
+    def update_local(self, prox):
         '''
         Updates the speed of the the robot wheels using the position of the robots in case we are in a LOCAL path search
         Inputs:
@@ -268,10 +264,6 @@ class MotionControl:
             l_speed - speed for the left motor [aseba unit]
             r_speed - speed for the right motor [aseba unit]
         '''
-        self.robot_pos.x = x_pos    # first of all, update the state of the robot
-        self.robot_pos.y = y_pos
-        self.robot_ori = ori
-
         lspeed_os = 60
         rspeed_os = 60
         yl = 0
