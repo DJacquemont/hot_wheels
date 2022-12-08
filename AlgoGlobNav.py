@@ -119,7 +119,9 @@ def dijkstra(inputNodes,inputeEdges,index_goal):
 
 
 def opt_path(vid, goal):
-    while (True):
+    count = 0
+    while count < 100:
+        count += 1
         try:
             terrain = vision.terrainFetch(vid, goal)
             nodes, nodeCon, maskObsDilated = terrain

@@ -268,8 +268,11 @@ class MotionControl:
             # if we just left the local avoidance algorithm, then we have to update the optimal path
             # before reseting the position index and turning back to the global algorithm
             if self.state == 'local':
-                self.nodes, self.nodeCon, self.maskObsDilated, optimal_path = gn.opt_path(vid, self.goal)
-                self.optimal_path = optimal_path*100
+                try :
+                    self.nodes, self.nodeCon, self.maskObsDilated, optimal_path = gn.opt_path(vid, self.goal)
+                    self.optimal_path = optimal_path*100
+                except:
+                    print("Skipped optimal path update")
 
                 self.opt_traj = Trajectory([])
                 i=0
