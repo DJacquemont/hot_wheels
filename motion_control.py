@@ -184,50 +184,6 @@ class MotionControl:
         self.l_speed = -(np.sign(angle_off)*speed_offset + K_piv*(angle_off)) * SPEED_RATIO
         self.r_speed = +(np.sign(angle_off)*speed_offset + K_piv*(angle_off)) * SPEED_RATIO
 
-    def update_motion(self, x_pos, y_pos, ori, prox, vid):
-        '''
-        Updates the speed of the the robot wheels using the position of the robots in case we are in a GLOBAL path search
-        Inputs:
-            x_pos, y_pos - estimated position of the robots from the kalman filter [cm]
-            ori - estimated orientation of the robot [rad]
-            sensors - front sensors on the thymio [aseba unit]
-            opt_path - optimal path to follow in case it is actuated
-        Outputs:
-            l_speed - speed for the left motor [aseba unit]
-            r_speed - speed for the right motor [aseba unit]
-        '''
-        self.robot_pos.x = x_pos    # first of all, update the state of the robot
-        self.robot_pos.y = y_pos
-        self.robot_ori = ori
-        
-        # if the sensors detect something, we follow the local avoidance algorithme
-        prox = prox[0:5]
-        if any(prox):
-            self.state = 'local'
-            self.update_local(prox)
-
-        # if the sensors dont detect anything, follow global algorithme
-        else:
-            # if we just left the local avoidance algorithm, then we have to update the optimal path
-            # before reseting the position index and turning back to the global algorithm
-            if self.state == 'local':
-
-                nodes, nodeCon, maskObsDilated, optimal_pathP = gn.opt_path(vid)
-                opt_path = np.array(optimal_pathP)*vision.fieldWidthM/vision.fieldWidthP
-
-                self.opt_traj = Trajectory([])
-                i=0
-                for pos in opt_path:
-                    self.opt_traj.points = np.append(self.opt_traj.points, Node(i,pos[0],pos[1]))
-                    i+=1
-                self.robot_pos.id = 0
-                self.state = 'global'
-                self.update_global()
-                return nodes, nodeCon, maskObsDilated, opt_path
-            else:
-                self.state = 'global'
-                self.update_global()
-
     def update_global(self):
         '''
         Updates the speed of the the robot wheels using the position of the robots in case we are in a GLOBAL path search
@@ -279,3 +235,47 @@ class MotionControl:
             
         self.l_speed = yl + lspeed_os   # update the speed of the wheels
         self.r_speed = yr + rspeed_os
+
+    def update_motion(self, x_pos, y_pos, ori, prox, vid):
+        '''
+        Updates the speed of the the robot wheels using the position of the robots in case we are in a GLOBAL path search
+        Inputs:
+            x_pos, y_pos - estimated position of the robots from the kalman filter [cm]
+            ori - estimated orientation of the robot [rad]
+            sensors - front sensors on the thymio [aseba unit]
+            opt_path - optimal path to follow in case it is actuated
+        Outputs:
+            l_speed - speed for the left motor [aseba unit]
+            r_speed - speed for the right motor [aseba unit]
+        '''
+        self.robot_pos.x = x_pos    # first of all, update the state of the robot
+        self.robot_pos.y = y_pos
+        self.robot_ori = ori
+        
+        # if the sensors detect something, we follow the local avoidance algorithme
+        prox = prox[0:5]
+        if any(prox):
+            self.state = 'local'
+            self.update_local(prox)
+
+        # if the sensors dont detect anything, follow global algorithme
+        else:
+            # if we just left the local avoidance algorithm, then we have to update the optimal path
+            # before reseting the position index and turning back to the global algorithm
+            if self.state == 'local':
+
+                nodes, nodeCon, maskObsDilated, optimal_pathP = gn.opt_path(vid)
+                optimal_path = np.array(optimal_pathP)*vision.fieldWidthM/vision.fieldWidthP
+
+                self.opt_traj = Trajectory([])
+                i=0
+                for pos in optimal_path:
+                    self.opt_traj.points = np.append(self.opt_traj.points, Node(i,pos[0],pos[1]))
+                    i+=1
+                self.robot_pos.id = 0
+                self.state = 'global'
+                self.update_global()
+                return nodes, nodeCon, maskObsDilated, optimal_pathP
+            else:
+                self.state = 'global'
+                self.update_global()
