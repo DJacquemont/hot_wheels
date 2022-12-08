@@ -1,5 +1,9 @@
+import time
+
 import numpy as np
 import pygame as pg
+
+import kalman
 import vision
 
 
@@ -15,8 +19,8 @@ def move(_x: float, _y: float, psi: float, w: int, h: int, obj, surface):
         surface - pygame window object
     """
     # Convert x,y to pixels
-    x = int(_x * 1000 - 25) / 2
-    y = int(h - _y * 1000 - 25) / 2
+    x = int(_x * 1000 / 2 - 25)
+    y = int(h - _y * 1000 / 2 - 25)
     # Draw Thymio image on surface
     thymio = pg.transform.rotate(obj, psi*180/np.pi)
     surface.blit(thymio, (x, y))
@@ -36,7 +40,7 @@ def drawLine(_x: list, _y: list, w: int, h: int, surface):
     while count < n_prev and count <= len(_x):
         # Convert x,y to pixels
         x = int(_x[len(_x)-count] * 1000) / 2
-        y = int(h - _y[len(_x)-count] * 1000) / 2
+        y = int(h - _y[len(_x)-count] * 1000 / 2)
         # Draw dots with fading red coloring
         surface.fill(( int(255*(1-count/n_prev)),0,0 ), ((x, y), (3, 3)))
         count += 1
@@ -51,7 +55,7 @@ def path(optimal_path, w, h, surface):
         surface - pygame window object
     """
     for i in range(len(optimal_path)):
-        pg.draw.circle(surface, (0, 255, 0), (int(optimal_path[i][0] * 1000), int(h - optimal_path[i][1] * 1000)), 5)
+        pg.draw.circle(surface, (0, 255, 0), (int(optimal_path[i][0] * 1000 / 2), int(h - optimal_path[i][1] * 1000 / 2)), 3)
 
 
 def init_state(vid):
@@ -66,6 +70,46 @@ def init_state(vid):
             fetched = True
         i += 1
     return pose, orientation
+
+
+def estimate_pose(dt: float, kf, velocity_measurement: np.array, position_measurement: np.array, fetched: bool) -> None:
+
+    # Define variance matrices of measurements
+    meas_variance_pos = np.array([[0.001, 0],
+                                  [0, 0.001]])
+    meas_variance_vel = np.array([[0.1, 0],
+                                  [0, 0.1]])
+
+    # Prediction step
+    kf.predict(dt=dt)
+
+    # Update step
+    kf.update(meas_value=velocity_measurement,  # Update step using linear velocity measurement
+                  meas_variance=meas_variance_vel,
+                  C=np.array([[0, 0, 1, 0], [0, 0, 0, 1]]))
+    if fetched:
+        kf.update(meas_value=list(position_measurement),  # Update step using position measurement
+                      meas_variance=meas_variance_pos,
+                      C=np.array([[1, 0, 0, 0], [0, 1, 0, 0]]))
+
+
+def estimate_orientation(dt: float, kf, angular_speed_measurement: np.array, angle_measurement: np.array, fetched: bool) -> None:
+
+    # Define variance matrices of measurements
+    meas_variance_att = np.array([0.001])
+    meas_variance_omega = np.array([0.1])
+
+    # Prediction step
+    kf.predict(dt=dt)
+
+    # Update step
+    kf.update(meas_value=angular_speed_measurement,  # Update step using angular velocity measurement
+                  meas_variance=meas_variance_omega,
+                  C=np.array([0, 1]))
+    if fetched:
+        kf.update(meas_value=angle_measurement[0],  # Update step using angle measurement
+                      meas_variance=meas_variance_att,
+                      C=np.array([1, 0]))
 
 
 class Kalman:

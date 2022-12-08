@@ -25,6 +25,7 @@ class Edge:
             return 1
         else:
             return 0
+
     def compare_end(self,p2):
         if(self.end.x == p2[0] and self.end.y == p2[1]):
             return 1
@@ -45,6 +46,9 @@ def initEdges(inputN,inputE):
                     inputN[inputE[i][1]][0],inputN[inputE[i][1]][1])
         Edges[2*i+1] =Edge(inputN[inputE[i][1]][0],inputN[inputE[i][1]][1],
                          inputN[inputE[i][0]][0],inputN[inputE[i][0]][1])
+
+
+
     return Edges
 
 
@@ -52,6 +56,8 @@ def dijkstra(inputNodes,inputeEdges,index_goal):
     
     #Initilization of objects and tab
     Edges = initEdges(inputNodes,inputeEdges)
+
+
     Nodes = inputNodes
     tabLenPath = np.empty(len(Nodes), dtype=float) 
     tabLenPath[:] = float('inf')
@@ -65,21 +71,26 @@ def dijkstra(inputNodes,inputeEdges,index_goal):
     iteration = 0
     
     #Check if all edges are used
-    while(len(Edges) != 0 ): 
+    while(len(Edges) != 0 ):
         
         for edge in Edges:
             #Check if starting node of edge is actual node
             if(edge.compare_start(act_node)):
-                
-                #Find the index of this node 
-                idx = tabIndex[(edge.end.x,edge.end.y)]
-                
+
+                #Find the index of this node
+
+
+
+                idx = tabIndex[(edge.end.x, edge.end.y)]
+
                 #Check if current path is shortest than the new one 
                 if(act_dist +  edge.len_() < tabLenPath[idx]):
+
                     tabLenPath[idx] = act_dist +  edge.len_()
                     
                     #Check if current path is empty or not
                     if(len(tabPath[idx])== 0):
+
 
                         for i in act_path:
                             tabPath[idx].append([i[0],i[1]])
@@ -104,18 +115,18 @@ def dijkstra(inputNodes,inputeEdges,index_goal):
         act_node = Nodes[idx_min]
         act_path = tabPath[idx_min]
 	
-    return np.array(tabPath[index_goal]
+    return np.array(tabPath[index_goal])
 
 
-def opt_path(vid):
-    while(True):
-        terrain = vision.terrainFetch(vid)
-        if type(terrain) != bool:
-            nodes,nodeCon, maskObsDilated = terrain
-            break
-    
-    return optimal_path = dijkstra(node,nodeCon,-1)
-		
+def opt_path(vid, goal):
+    while (True):
+        try:
+            terrain = vision.terrainFetch(vid, goal)
+            nodes, nodeCon, maskObsDilated = terrain
+            return nodes, nodeCon, maskObsDilated, dijkstra(nodes, nodeCon, -1)
+        except:
+            #print("opt_path")
+            pass
 
 
 

@@ -106,7 +106,7 @@ class Trajectory:
         self.total_len = np.sum([points[idx].dist(points[idx+1]) for idx in range(len(points)-1)])
                 
 class MotionControl:
-    def __init__(self, traj, x_pos, y_pos, angle, err_dist=3, err_angle=np.pi/8
+    def __init__(self, traj, x_pos, y_pos, angle, nodes, nodeCon, maskObsDilated, goal, err_dist=3, err_angle=np.pi/5
     ):
         '''
         The MotionControl class allows to compute the speed of the wheel motors, it has:
@@ -135,7 +135,13 @@ class MotionControl:
         self.l_speed = 0
         self.r_speed = 0
         self.state = 'global'
-        
+
+        self.goal = goal
+        self.optimal_path = traj
+        self.nodes = nodes
+        self.nodeCon = nodeCon
+        self.maskObsDilated = maskObsDilated
+
     def move_fwd(self, goal_node):
         ''' 
         Move foward function: gives instructions for the robot to move from a point A to B (using a proportional controller)
@@ -180,7 +186,6 @@ class MotionControl:
         # TUNE PARAMETERS
         K_piv = 0.8
         speed_offset = 0.8 # [cm/s]
-
         self.l_speed = -(np.sign(angle_off)*speed_offset + K_piv*(angle_off)) * SPEED_RATIO
         self.r_speed = +(np.sign(angle_off)*speed_offset + K_piv*(angle_off)) * SPEED_RATIO
 
@@ -210,7 +215,7 @@ class MotionControl:
                 self.pivot(next_point)      # then pivot to face the next point
             else:
                 self.move_fwd(next_point)   # else go forward the next point
-                
+
     def update_local(self, prox):
         '''
         Updates the speed of the the robot wheels using the position of the robots in case we are in a LOCAL path search
@@ -220,12 +225,12 @@ class MotionControl:
             l_speed - speed for the left motor [aseba unit]
             r_speed - speed for the right motor [aseba unit]
         '''
-        lspeed_os = 60
-        rspeed_os = 60
+        lspeed_os = 30
+        rspeed_os = 30
         yl = 0
         yr = 0
-        wl = [-2,-2,-2,-2,-0.5]
-        wr = [+4,+4,+3,+2,+1]
+        wl = [-1,-1,-1,-1,-0.25]
+        wr = [+2,+2,+1.5,+1,+0.5]
 
         prox = prox[0:5]
         for i in range(5):
@@ -263,19 +268,14 @@ class MotionControl:
             # if we just left the local avoidance algorithm, then we have to update the optimal path
             # before reseting the position index and turning back to the global algorithm
             if self.state == 'local':
-
-                nodes, nodeCon, maskObsDilated, optimal_pathP = gn.opt_path(vid)
-                optimal_path = np.array(optimal_pathP)*vision.fieldWidthM/vision.fieldWidthP
+                self.nodes, self.nodeCon, self.maskObsDilated, optimal_path = gn.opt_path(vid, self.goal)
+                self.optimal_path = optimal_path*100
 
                 self.opt_traj = Trajectory([])
                 i=0
-                for pos in optimal_path:
+                for pos in self.optimal_path:
                     self.opt_traj.points = np.append(self.opt_traj.points, Node(i,pos[0],pos[1]))
                     i+=1
                 self.robot_pos.id = 0
-                self.state = 'global'
-                self.update_global()
-                return nodes, nodeCon, maskObsDilated, optimal_pathP
-            else:
-                self.state = 'global'
-                self.update_global()
+            self.state = 'global'
+            self.update_global()
