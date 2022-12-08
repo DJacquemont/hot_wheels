@@ -184,6 +184,58 @@ class MotionControl:
         self.l_speed = -(np.sign(angle_off)*speed_offset + K_piv*(angle_off)) * SPEED_RATIO
         self.r_speed = +(np.sign(angle_off)*speed_offset + K_piv*(angle_off)) * SPEED_RATIO
 
+    def update_global(self):
+        '''
+        Updates the speed of the the robot wheels using the position of the robots in case we are in a GLOBAL path search
+        Inputs:
+            x_pos, y_pos - estimated position of the robots from the kalman filter [cm]
+            ori - estimated orientation of the robot [rad]
+        Outputs:
+            l_speed - speed for the left motor [aseba unit]
+            r_speed - speed for the right motor [aseba unit]
+        '''
+        # if the goal point is reached --> stop the wheels 
+        if self.robot_pos.dist(self.opt_traj.points[len(self.opt_traj.points)-1]) < self.err_dist: 
+            self.l_speed, self.r_speed = 0, 0
+
+        # if the goal point isn't reached yet 
+        else:
+            next_point = self.opt_traj.points[self.robot_pos.id+1]          # next point to follow
+            if self.robot_pos.dist(next_point) < self.err_dist:             # if next point is reached
+                self.robot_pos.id += 1                                      # update the id of the robot position
+                next_point = self.opt_traj.points[self.robot_pos.id+1]      # update the next point to follow
+
+            # if the angle between the robot orientation and the next point is too high
+            if abs(self.robot_ori - self.robot_pos.join_angle(next_point)) > self.err_angle:
+                self.pivot(next_point)      # then pivot to face the next point
+            else:
+                self.move_fwd(next_point)   # else go forward the next point
+                
+    def update_local(self, prox):
+        '''
+        Updates the speed of the the robot wheels using the position of the robots in case we are in a LOCAL path search
+        Inputs:
+            sensors - front sensors on the thymio [aseba unit]
+        Outputs:
+            l_speed - speed for the left motor [aseba unit]
+            r_speed - speed for the right motor [aseba unit]
+        '''
+        lspeed_os = 60
+        rspeed_os = 60
+        yl = 0
+        yr = 0
+        wl = [-2,-2,-2,-2,-0.5]
+        wr = [+4,+4,+3,+2,+1]
+
+        prox = prox[0:5]
+        for i in range(5):
+            # Compute outputs of neurons and set motor powers
+            yl += prox[i]//50 * wl[i]
+            yr += prox[i]//50 * wr[i]
+            
+        self.l_speed = yl + lspeed_os   # update the speed of the wheels
+        self.r_speed = yr + rspeed_os
+
     def update_motion(self, x_pos, y_pos, ori, prox, vid):
         '''
         Updates the speed of the the robot wheels using the position of the robots in case we are in a GLOBAL path search
@@ -204,7 +256,7 @@ class MotionControl:
         prox = prox[0:5]
         if any(prox):
             self.state = 'local'
-            self.update_local(x_pos, y_pos, ori, prox)
+            self.update_local(prox)
 
         # if the sensors dont detect anything, follow global algorithme
         else:
@@ -213,77 +265,17 @@ class MotionControl:
             if self.state == 'local':
 
                 nodes, nodeCon, maskObsDilated, optimal_pathP = gn.opt_path(vid)
-                opt_path = np.array(optimal_pathP)*vision.fieldWidthM/vision.fieldWidthP
+                optimal_path = np.array(optimal_pathP)*vision.fieldWidthM/vision.fieldWidthP
 
                 self.opt_traj = Trajectory([])
                 i=0
-                for pos in opt_path:
+                for pos in optimal_path:
                     self.opt_traj.points = np.append(self.opt_traj.points, Node(i,pos[0],pos[1]))
                     i+=1
                 self.robot_pos.id = 0
                 self.state = 'global'
-                self.update_global(x_pos, y_pos, ori)
-                return nodes, nodeCon, maskObsDilated, opt_path
+                self.update_global()
+                return nodes, nodeCon, maskObsDilated, optimal_pathP
             else:
                 self.state = 'global'
-                self.update_global(x_pos,y_pos,ori)
-
-    def update_global(self, x_pos, y_pos, ori):
-        '''
-        Updates the speed of the the robot wheels using the position of the robots in case we are in a GLOBAL path search
-        Inputs:
-            x_pos, y_pos - estimated position of the robots from the kalman filter [cm]
-            ori - estimated orientation of the robot [rad]
-        Outputs:
-            l_speed - speed for the left motor [aseba unit]
-            r_speed - speed for the right motor [aseba unit]
-        '''
-        self.robot_pos.x = x_pos    # first of all, update the state of the robot
-        self.robot_pos.y = y_pos
-        self.robot_ori = ori
-
-        # if the goal point is reached --> stop the wheels 
-        if self.robot_pos.dist(self.opt_traj.points[len(self.opt_traj.points)-1]) < self.err_dist: 
-            self.l_speed, self.r_speed = 0, 0
-
-        # if the goal point isn't reached yet 
-        else:
-            next_point = self.opt_traj.points[self.robot_pos.id+1]          # next point to follow
-            if self.robot_pos.dist(next_point) < self.err_dist:             # if next point is reached
-                self.robot_pos.id += 1                                      # update the id of the robot position
-                next_point = self.opt_traj.points[self.robot_pos.id+1]      # update the next point to follow
-
-            # if the angle between the robot orientation and the next point is too high
-            if abs(self.robot_ori - self.robot_pos.join_angle(next_point)) > self.err_angle:
-                self.pivot(next_point)      # then pivot to face the next point
-            else:
-                self.move_fwd(next_point)   # else go forward the next point
-                
-    def update_local(self, x_pos, y_pos, ori, prox):
-        '''
-        Updates the speed of the the robot wheels using the position of the robots in case we are in a LOCAL path search
-        Inputs:
-            sensors - front sensors on the thymio [aseba unit]
-        Outputs:
-            l_speed - speed for the left motor [aseba unit]
-            r_speed - speed for the right motor [aseba unit]
-        '''
-        self.robot_pos.x = x_pos    # first of all, update the state of the robot
-        self.robot_pos.y = y_pos
-        self.robot_ori = ori
-
-        lspeed_os = 60
-        rspeed_os = 60
-        yl = 0
-        yr = 0
-        wl = [-2,-2,-2,-2,-0.5]
-        wr = [+4,+4,+3,+2,+1]
-
-        prox = prox[0:5]
-        for i in range(5):
-            # Compute outputs of neurons and set motor powers
-            yl += prox[i]//50 * wl[i]
-            yr += prox[i]//50 * wr[i]
-            
-        self.l_speed = yl + lspeed_os   # update the speed of the wheels
-        self.r_speed = yr + rspeed_os
+                self.update_global()
