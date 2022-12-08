@@ -224,6 +224,10 @@ class MotionControl:
             l_speed - speed for the left motor [aseba unit]
             r_speed - speed for the right motor [aseba unit]
         '''
+        self.robot_pos.x = x_pos    # first of all, update the state of the robot
+        self.robot_pos.y = y_pos
+        self.robot_ori = ori
+
         # if the goal point is reached --> stop the wheels 
         if self.robot_pos.dist(self.opt_traj.points[len(self.opt_traj.points)-1]) < self.err_dist: 
             self.l_speed, self.r_speed = 0, 0
@@ -250,6 +254,10 @@ class MotionControl:
             l_speed - speed for the left motor [aseba unit]
             r_speed - speed for the right motor [aseba unit]
         '''
+        self.robot_pos.x = x_pos    # first of all, update the state of the robot
+        self.robot_pos.y = y_pos
+        self.robot_ori = ori
+        
         lspeed_os = 60
         rspeed_os = 60
         yl = 0
