@@ -48,7 +48,8 @@ outputs:
 '''
 
 import numpy as np
-from matplotlib import pyplot as plt
+import AlgoGlobNav as gn
+import vision
 
 ################ constants ################
 ROBOT_WIDTH = 9
@@ -182,7 +183,7 @@ class MotionControl:
         self.l_speed = -(np.sign(angle_off)*speed_offset + K_piv*(angle_off)) * SPEED_RATIO
         self.r_speed = +(np.sign(angle_off)*speed_offset + K_piv*(angle_off)) * SPEED_RATIO
 
-    def update_motion(self, x_pos, y_pos, ori, prox, opt_path):
+    def update_motion(self, x_pos, y_pos, ori, prox, vid):
         '''
         Updates the speed of the the robot wheels using the position of the robots in case we are in a GLOBAL path search
         Inputs:
@@ -209,6 +210,10 @@ class MotionControl:
             # if we just left the local avoidance algorithm, then we have to update the optimal path
             # before reseting the position index and turning back to the global algorithm
             if self.state == 'local':
+                
+                optimal_pathP = gn.opt_path(vid)
+                opt_path = np.array(optimal_pathP)*vision.fieldWidthM/vision.fieldWidthP
+
                 self.opt_traj = Trajectory([])
                 i=0
                 for pos in opt_path:
