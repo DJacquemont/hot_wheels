@@ -36,4 +36,16 @@ In order to fetch the map, function <b>terrainFetch</b> computing the visibility
 
 ## Motion control
 
-*todo*
+Because Thymio is a two-wheeled robot it can go strait forward by setting the right and left wheelspeed to the same value, and it can pivot by setting the wheel speed to opposite values. These are the two basic control movement we used to control our Thymio's motion.
+
+We have decided to use a proportional controller for both the forward and pivot motion: the further the robot's state from the desired state, the faster the movement.
+| Motion | Inputs | Computes | Outputs |
+|---:|---|---|---|
+| **Forward** | - Position of the robot, target point | - Distance to the target point | Wheel speed = $K * d + C$|
+| **Pivot** | - Angle of the robot, target point | - Difference in angle between the robot and the target point | Wheel speed = $ \pm K \cdot \alpha_{diff} + C$|
+
+> It is important to note that the right and left wheel speeds differ a bit according the the angle between Thymio and the target point during the forward motion in order to track better the target. For example if the angle of Thymio is a bit off by $-\pi/8$ then the right wheel will be a bit faster than the left wheel.
+
+We have designed a finite state machine as follows to decide what movement Thymio should follow. The 
+
+
