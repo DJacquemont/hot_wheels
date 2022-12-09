@@ -22,7 +22,9 @@ Those modules are further detailed bellow:
 
 This module includes functions converting the information percieved by the camera into a map, a goal and the current position of the robot. To this end, the image obtained from the camera is first filtered using a median filter, useful to remove the noise while preserving clear edges. 
 
-In order to fetch the map, function terrainFetch computing the visibility graph is called. Pixel segmentation is done on the retrieved image, followed by a blob analysis only conserving blobs of a certain size (filtering leftover noise). These blobs are then dilated to account for the robot's size, and the corners for each blob of the dilated mask are computed. The start and end point (i.e. start position of the robot and goal position) are also fetched, and added to the previous nodes (i.e. corners of the dilated image). To check weither the nodes are connected, for each node every node is considered
+In order to fetch the map, function <b>terrainFetch</b> computing the visibility graph is called. Pixel segmentation is done on the retrieved image, followed by a blob analysis only conserving blobs of a certain size (filtering leftover noise). These blobs are then dilated to account for the robot's size, and the corners for each blob of the dilated mask are computed. The start and end point (i.e. start position of the robot and goal position) are also fetched, and added to the previous nodes (i.e. corners of the dilated image). To check weither the nodes are connected, each node is iterating over all the node, checking wether it has a direct connection (without intersecting the obstacles' dilated blobs) or not. This function returns the position of the nodes, their connections, and the obstacles' dilated mask (displayed in the visual interface).
+
+
 
 ## Kalman Filter
 
