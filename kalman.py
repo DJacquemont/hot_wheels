@@ -39,7 +39,7 @@ def drawLine(_x: list, _y: list, w: int, h: int, surface):
     n_prev = 1000
     while count < n_prev and count <= len(_x):
         # Convert x,y to pixels
-        x = int(_x[len(_x)-count] * 1000) / 2
+        x = int(_x[len(_x)-count] * 1000 / 2)
         y = int(h - _y[len(_x)-count] * 1000 / 2)
         # Draw dots with fading red coloring
         surface.fill(( int(255*(1-count/n_prev)),0,0 ), ((x, y), (3, 3)))
@@ -58,27 +58,14 @@ def path(optimal_path, w, h, surface):
         pg.draw.circle(surface, (0, 255, 0), (int(optimal_path[i][0] * 1000 / 2), int(h - optimal_path[i][1] * 1000 / 2)), 3)
 
 
-def init_state(vid):
-    fetched = False
-    i = 0
-    pose, orientation = (None, None)
-    while (not fetched) and (i < 100):
-        odoMet = vision.fetchOdoMeters(vid)
-        if type(odoMet) != bool:
-            pose = odoMet[0:2]
-            orientation = odoMet[2]
-            fetched = True
-        i += 1
-    return pose, orientation
-
-
 def estimate_pose(dt: float, kf, velocity_measurement: np.array, position_measurement: np.array, fetched: bool) -> None:
-
+    """ estimate_pose function: use pose Kalman filter to calculate next pose estimate """
+    
     # Define variance matrices of measurements
-    meas_variance_pos = np.array([[0.001, 0],
-                                  [0, 0.001]])
-    meas_variance_vel = np.array([[0.1, 0],
-                                  [0, 0.1]])
+    meas_variance_pos = np.array([[0.0001, 0],
+                                  [0, 0.0001]])
+    meas_variance_vel = np.array([[0.01, 0],
+                                  [0, 0.01]])
 
     # Prediction step
     kf.predict(dt=dt)
@@ -94,10 +81,11 @@ def estimate_pose(dt: float, kf, velocity_measurement: np.array, position_measur
 
 
 def estimate_orientation(dt: float, kf, angular_speed_measurement: np.array, angle_measurement: np.array, fetched: bool) -> None:
-
+    """ estimate_orientation function: use orientation Kalman filter to calculate next orientation estimate """
+    
     # Define variance matrices of measurements
-    meas_variance_att = np.array([0.001])
-    meas_variance_omega = np.array([0.1])
+    meas_variance_att = np.array([0.0001])
+    meas_variance_omega = np.array([0.01])
 
     # Prediction step
     kf.predict(dt=dt)
@@ -125,8 +113,10 @@ class Kalman:
         self._P = 0*np.eye(len(self._x))
 
     def predict(self, dt: float) -> None:
+        """ predict function: Kalman filter prediction step """
         # x = Ax
         # P = A P At + Q
+        
         if self.type == "pose":
             A = np.array([[1, 0, dt, 0],
                          [0, 1, 0, dt],
@@ -154,6 +144,7 @@ class Kalman:
             print("Could not update state prediction")
 
     def update(self, meas_value: np.array, meas_variance: np.array, C : np.array) -> None:
+        """ update function: Kalman filter update step """
         # y = z - Cx
         # S = C P Ct + R
         # K = P Ct S^-1
