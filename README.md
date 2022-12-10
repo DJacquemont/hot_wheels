@@ -32,7 +32,7 @@ The goal represented by a red square piece of paper is fetched with function <b>
 In order to get a visual feedback on what the algorithm outputs, function <b>liveFeedback</b> was created, it prints each node and their connections, the dilated obstacles, the robot's current position and angle, and the goal position.
 
 
-![alt text](https://github.com/[DJacquemont]/[Hot-Wheels]/blob/[main]/img/Thymio.jpg?raw=true)
+![alt text](img/Thymio.jpg)
 
 ## Kalman Filter
 
