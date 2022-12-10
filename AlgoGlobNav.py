@@ -63,8 +63,9 @@ def dijkstra(inputNodes,inputEdges,index_goal):
     
     #Initilization of objects and tab
     Edges = initEdges(inputNodes,inputEdges)
-
     Nodes = initNodes(inputNodes)
+    #tabLenPath = np.empty(len(Nodes), dtype=float) 
+    #tabLenPath[:] = float('inf')
     tabLenPath = len(Nodes)*[float('inf')]
     tabPath = [ [] for _ in range(len(Nodes))]
     tabIndex = {(k.x,k.y): v for v, k in enumerate(Nodes)}
@@ -73,10 +74,10 @@ def dijkstra(inputNodes,inputEdges,index_goal):
     act_node = Nodes[-2]
     act_dist = 0
     act_path = [act_node]
+    #act_path = [Nodes[-2]]
     iteration = 0
-	
     #Check if all edges are used
-    while(len(Edges) != 0 ):
+    while(len(Edges) != 0 and iteration<200):
         
         for edge in Edges:
             #Check if starting node of edge is actual node
@@ -98,6 +99,7 @@ def dijkstra(inputNodes,inputEdges,index_goal):
                         tabPath[idx].append(edge.end)
 
                     else:
+
                         tabPath[idx].clear()
                         for i in act_path:
                             tabPath[idx].append(i)
@@ -111,6 +113,7 @@ def dijkstra(inputNodes,inputEdges,index_goal):
         iteration += 1
         min_dist = heapq.nsmallest(iteration,tabLenPath)
         min_dist = min_dist[-1]
+        #idx_min  = int(np.where(tabLenPath == min_dist)[0])
         idx_min = tabLenPath.index(min_dist)
         act_dist = tabLenPath[idx_min]
         act_node = Nodes[idx_min]
@@ -120,7 +123,7 @@ def dijkstra(inputNodes,inputEdges,index_goal):
     output = [[0,0] for _ in range(len(optPath))]
     for i in range(len(output)):
         output[i][0]= optPath[i].x
-        output[i][1]= optPath[i].y    
+        output[i][1]= optPath[i].y  
     return np.array(output)
 
 
