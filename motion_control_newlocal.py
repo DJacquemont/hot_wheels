@@ -229,7 +229,7 @@ class MotionControl:
         self.l_speed = -30
         self.r_speed = +30
 
-    def update_local_pivot(self):
+    def update_local_fwd(self):
         ''' 
         Local pivot function: gives instructions for the robot to turn right during the local avoidance
         Inputs:
@@ -240,7 +240,7 @@ class MotionControl:
 
         '''
         self.l_speed = +60
-        self.r_speed = +30
+        self.r_speed = +60
 
     def update_motion(self, x_pos, y_pos, ori, prox, vid):
         '''
@@ -262,46 +262,36 @@ class MotionControl:
         prox = prox[0:5]
         if any(prox) & (self.state == 'global'):
             self.init_local_angle = ori
+            self.init_local_pos = Node(0,x_pos,y_pos)
             self.state = 'local_pivot'
 
         if self.state == 'local_pivot':
-
-            angle_off = ori - self.init_local_angle
-            angle_off = angle_off if (angle_off > -np.pi) and (angle_off < np.pi) else \
-                        angle_off - 2 * np.pi if (angle_off > np.pi) else \
-                        angle_off + 2 * np.pi
-
-            if angle_off < np.pi/2:
+            if any(prox):
                 self.update_local_pivot()
             else:
-                self.state = 'local_turn'
+                self.state = 'local_fwd'
 
-        if self.state == 'local_turn':
-            if any(prox):
-                self.init_local_angle = ori
-                self.state = 'local_pivot'
+        if self.state == 'local_fwd':
+            if self.init_local_pos.dist(self.robot_pos) < 0.1:
+                if any(prox):
+                    self.init_local_angle = ori
+                    self.init_local_pos = Node(0,x_pos,y_pos)
+                    self.state = 'local_pivot'
+                else:
+                    self.update_local_fwd()
             else:
-
-                angle_off = ori - self.init_local_angle
-                angle_off = angle_off if (angle_off > -np.pi) and (angle_off < np.pi) else \
-                        angle_off - 2 * np.pi if (angle_off > np.pi) else \
-                        angle_off + 2 * np.pi
-                        
-                if angle_off < 0:
-                    self.state == 'global'
-                    try :
-                        self.nodes, self.nodeCon, self.maskObsDilated, optimal_path = gn.opt_path(vid, self.goal)
-                        self.optimal_path = optimal_path*100
-                        self.opt_traj = Trajectory([])
-                        i=0
-                        for pos in self.optimal_path:
-                            self.opt_traj.points = np.append(self.opt_traj.points, Node(i,pos[0],pos[1]))
-                            i+=1
-                        self.robot_pos.id = 0
-                    except:
-                        print("Skipped optimal path update")
-                else:        
-                    self.update_local_turn()
+                self.state = 'global'
+                try :
+                    self.nodes, self.nodeCon, self.maskObsDilated, optimal_path = gn.opt_path(vid, self.goal)
+                    self.optimal_path = optimal_path*100
+                    self.opt_traj = Trajectory([])
+                    i=0
+                    for pos in self.optimal_path:
+                        self.opt_traj.points = np.append(self.opt_traj.points, Node(i,pos[0],pos[1]))
+                        i+=1
+                    self.robot_pos.id = 0
+                except:
+                    print("Skipped optimal path update")
 
         # if the sensors dont detect anything, follow global algorithme
         if self.state == 'global':
