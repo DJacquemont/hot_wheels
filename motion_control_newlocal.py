@@ -287,25 +287,20 @@ class MotionControl:
                         angle_off + 2 * np.pi
                 if angle_off < 0:
                     self.state == 'global'
+                    try :
+                        self.nodes, self.nodeCon, self.maskObsDilated, optimal_path = gn.opt_path(vid, self.goal)
+                        self.optimal_path = optimal_path*100
+                        self.opt_traj = Trajectory([])
+                        i=0
+                        for pos in self.optimal_path:
+                            self.opt_traj.points = np.append(self.opt_traj.points, Node(i,pos[0],pos[1]))
+                            i+=1
+                        self.robot_pos.id = 0
+                    except:
+                        print("Skipped optimal path update")
                 else:        
                     self.update_local_turn()
-                    
+
         # if the sensors dont detect anything, follow global algorithme
         if self.state == 'global':
-            # if we just left the local avoidance algorithm, then we have to update the optimal path
-            # before reseting the position index and turning back to the global algorithm
-            if self.state == 'local':
-                try :
-                    self.nodes, self.nodeCon, self.maskObsDilated, optimal_path = gn.opt_path(vid, self.goal)
-                    self.optimal_path = optimal_path*100
-                except:
-                    print("Skipped optimal path update")
-
-                self.opt_traj = Trajectory([])
-                i=0
-                for pos in self.optimal_path:
-                    self.opt_traj.points = np.append(self.opt_traj.points, Node(i,pos[0],pos[1]))
-                    i+=1
-                self.robot_pos.id = 0
-            self.state = 'global'
             self.update_global()
