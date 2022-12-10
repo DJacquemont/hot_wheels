@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import math
 from IPython.display import display, clear_output
+import time
 
 ## FIELD PARAMETERS ##
 fieldWidthM = 0.841  # width of A0 sheet [m]
@@ -14,8 +15,10 @@ TLowPos = np.array([245, 245, 245])
 THighPos = np.array([255, 255, 255])
 
 # GOAL SEGMENTATION - DARK RED
-TLowGoal = np.array([30, 20, 90])
-THighGoal = np.array([80, 70, 165])
+TLowGoal = np.array([37, 20, 81])
+THighGoal = np.array([106, 84, 167])
+#TLowGoal = np.array([57, 32, 137])
+#THighGoal = np.array([77, 52, 157])
 
 # DIRECTION SEGMENTATION - RED
 TLowDir = np.array([180, 120, 230])
@@ -146,7 +149,8 @@ def goalFetch(videoFeed):
             BlobGoalCenter = []
             for i in range(1, totalLabelsGoal):
                 areaBlobGoal = statsGoal[i, cv2.CC_STAT_AREA]
-                if (areaBlobGoal > 200) and (areaBlobGoal < 1000): # filtering the blobs by area, only want 1
+                if (areaBlobGoal > 900) and (areaBlobGoal < 1300):
+                #if (areaBlobGoal > 200) and (areaBlobGoal < 1000): # filtering the blobs by area, only want 1
                     BlobGoalCenter.append(BlobGoal[i])
 
             if np.shape(BlobGoalCenter)[0] == 1: # if only one blob, the center is found and the position computed
@@ -248,8 +252,8 @@ def liveFeedback(videoFeed, nodesM, nodeCon, maskObsDilated, optPathM):
     frame = frameReader(videoFeed)
     output = frame
 
-    #output = cv2.bitwise_and(frame, frame, mask=(~maskObsDilated))
-    #output[np.where((output == [0, 0, 0]).all(axis=2))] = [100, 100, 100]
+    output = cv2.bitwise_and(frame, frame, mask=(~maskObsDilated))
+    output[np.where((output == [0, 0, 0]).all(axis=2))] = [100, 100, 100]
 
     nodes[:, 0] = fieldLengthP - nodes[:, 0]
     for idx, node in enumerate(nodes):
