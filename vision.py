@@ -3,32 +3,31 @@ import numpy as np
 import math
 from IPython.display import display, clear_output
 
-## PARAMETERS ##
-
-# goal = [10, 10]
+## FIELD PARAMETERS ##
 fieldWidthM = 0.841  # width of A0 sheet [m]
 fieldLengthM = 1.189  # length of A0 sheet [m]
 fieldWidthP = 480  # width of FoV camera [pixels]
 fieldLengthP = 640  # width of FoV camera [pixels]
 
-# POSITION - GREEN
+# POSITION SEGMENTATION - GREEN
 TLowPos = np.array([245, 245, 245])
 THighPos = np.array([255, 255, 255])
 
-# GOAL - DARK RED
+# GOAL SEGMENTATION - DARK RED
 TLowGoal = np.array([30, 20, 90])
 THighGoal = np.array([80, 70, 165])
 
-# DIRECTION - RED
+# DIRECTION SEGMENTATION - RED
 TLowDir = np.array([180, 120, 230])
 THighDir = np.array([255, 255, 255])
 # TLowDir = np.array([150,130,200])
 # THighDir = np.array([200,200,255])
 
-# OBSTACLE - BLACK
+# OBSTACLES SEGMENTATION - BLACK
 TLowObs = np.array([0, 0, 0])
 THighObs = np.array([50, 50, 50])
 
+# CUSTOM STRUCTURAL ELEMENT BLOB DILATATION
 SE = np.array([[0, 0, 1, 0, 0],
                [0, 1, 1, 1, 0],
                [1, 1, 1, 1, 1],
@@ -40,6 +39,13 @@ SE = np.array([[0, 0, 1, 0, 0],
 
 # Frame Reading
 def frameReader(videoFeed):
+    ''' 
+    Frame reader function: Reads the frame from the video feed and apply median filter
+    Inputs:
+        videoFeed - video feed
+    Outputs:
+        frame.astype('uint8') - filtered frame, converted in uint8
+    '''
     try:
         ret, frame = videoFeed.read()
         frame = cv2.medianBlur(frame, 5)
@@ -52,33 +58,40 @@ def frameReader(videoFeed):
 
 # Fetching odometry
 def odoFetch(videoFeed):
+    ''' 
+    Position and angle fetching function: Tries to find the robot's position and direction
+    Inputs:
+        videoFeed - video feed
+    Outputs:
+        odometry - array with [x,y] position of the robot [m] and its angle [rad] with respect to the x axis
+    '''
+  
     frame = frameReader(videoFeed)
 
     posIsFetch = False
     angleIsFetch = False
 
-    # Fetching Position
-    maskPos = cv2.inRange(frame, TLowPos, THighPos)
-    totalLabelsPos, _, statsPos, BlobPos = cv2.connectedComponentsWithStats(maskPos, connectivity=8)
-
+    # Fetching green blobs
+    maskPos = cv2.inRange(frame, TLowPos, THighPos) # image segmentation for green/white pixels
+    totalLabelsPos, _, statsPos, BlobPos = cv2.connectedComponentsWithStats(maskPos, connectivity=8) # blob analysis
+    
     # print(statsPos[:, cv2.CC_STAT_AREA] )
     BlobPosCenter = []
     for i in range(1, totalLabelsPos):
         areaBlobPos = statsPos[i, cv2.CC_STAT_AREA]
-        if (areaBlobPos > 70) and (areaBlobPos < 350):  # Size of the desired blobs
+        if (areaBlobPos > 70) and (areaBlobPos < 350):  # filtering the blobs by area, only want 2
             BlobPosCenter.append(BlobPos[i])
 
-    if np.shape(BlobPosCenter)[0] == 2:  # Checking if the position was found
+    if np.shape(BlobPosCenter)[0] == 2:  # if only two green blobs left (after filtering) center is computed
         robotPos = [BlobPosCenter[0][0] + (BlobPosCenter[1][0] - BlobPosCenter[0][0]) / 2,
                     BlobPosCenter[0][1] + (BlobPosCenter[1][1] - BlobPosCenter[0][1]) / 2]
-        robotPos[0] = fieldLengthP - robotPos[0]
-        robotPos = np.rint(robotPos).astype(np.int32)
+        robotPos[0] = fieldLengthP - robotPos[0] # inverting the x axis for the other modules
+        robotPos = np.rint(robotPos).astype(np.int32) 
         posIsFetch = True
 
-    if posIsFetch:
-        # Fetching Direction
-        maskDir = cv2.inRange(frame, TLowDir, THighDir)
-        totalLabelsDir, _, statsDir, BlobDir = cv2.connectedComponentsWithStats(maskDir, connectivity=8)
+    if posIsFetch: # if position is obtained, the blob for the direction is worth finding
+        maskDir = cv2.inRange(frame, TLowDir, THighDir) # image segmentation for red/white pixels
+        totalLabelsDir, _, statsDir, BlobDir = cv2.connectedComponentsWithStats(maskDir, connectivity=8) # blob analysis
 
         # print(statsDir[:, cv2.CC_STAT_AREA])
         BlobDirCenter = []
@@ -86,25 +99,26 @@ def odoFetch(videoFeed):
         for i in range(1, totalLabelsDir):
             areaBlobDir = statsDir[i, cv2.CC_STAT_AREA]
             # if (areaBlobDir > 25) and (areaBlobDir < 150): # Size of the desired blobs
-            if (areaBlobDir > 10) and (areaBlobDir < 40):  # Size of the desired blobs
+            if (areaBlobDir > 10) and (areaBlobDir < 40):  # filtering the blobs by area, only want 1
                 BlobDirCenter.append(BlobDir[i])
                 goodBlobsIdx.append(i)
 
-        if np.shape(BlobDirCenter)[0] == 1:  # Checking if the angle was found
+        if np.shape(BlobDirCenter)[0] == 1:  # if only one blob, the center is found and the angle computed
             BlobDirCenter = [j for sub in BlobDirCenter for j in sub]
             BlobDirCenter[0] = fieldLengthP - BlobDirCenter[0]
             angle = math.atan2(BlobDirCenter[1] - robotPos[1], BlobDirCenter[0] - robotPos[0])
             angleIsFetch = True
-        elif ((np.shape(BlobDirCenter)[0] <= 3) and (np.shape(BlobDirCenter)[0] > 1)):
+        # if more than 1 but less than 3 blobs are found, the blob with max area is chosen
+        elif ((np.shape(BlobDirCenter)[0] <= 3) and (np.shape(BlobDirCenter)[0] > 1)): # if more than
             maxBlob = 0
             for idx in goodBlobsIdx:
                 if (statsDir[idx, cv2.CC_STAT_AREA] >= maxBlob):
                     BlobDirCenter = BlobDir[idx]
-            BlobDirCenter[0] = fieldLengthP - BlobDirCenter[0]
-            angle = math.atan2(BlobDirCenter[1] - robotPos[1], BlobDirCenter[0] - robotPos[0])
+            BlobDirCenter[0] = fieldLengthP - BlobDirCenter[0]  # inverting the x axis for the other modules
+            angle = math.atan2(BlobDirCenter[1] - robotPos[1], BlobDirCenter[0] - robotPos[0]) # direction is computed
             angleIsFetch = True
 
-    # Combining position & angle
+    # if both the angle and position are found, everything is returned in an array
     if (angleIsFetch and posIsFetch) == True:
         odometry = np.append(robotPos, angle)
         return odometry
@@ -116,21 +130,28 @@ def odoFetch(videoFeed):
 
 # Fetching goal
 def goalFetch(videoFeed):
+    ''' 
+    goal fetching function: Tries to find the goal on the map
+    Inputs:
+        videoFeed - video feed
+    Outputs:
+        goal position [m]
+    '''
     try:
         while (True):
             frame = frameReader(videoFeed)
-            maskGoal = cv2.inRange(frame, TLowGoal, THighGoal)
-            totalLabelsGoal, _, statsGoal, BlobGoal = cv2.connectedComponentsWithStats(maskGoal, connectivity=8)
+            maskGoal = cv2.inRange(frame, TLowGoal, THighGoal) # image segmentation for dark red pixels
+            totalLabelsGoal, _, statsGoal, BlobGoal = cv2.connectedComponentsWithStats(maskGoal, connectivity=8) # blob analysis
 
             BlobGoalCenter = []
             for i in range(1, totalLabelsGoal):
                 areaBlobGoal = statsGoal[i, cv2.CC_STAT_AREA]
-                if (areaBlobGoal > 200) and (areaBlobGoal < 1000):  # Size of the desired blobs
+                if (areaBlobGoal > 200) and (areaBlobGoal < 1000): # filtering the blobs by area, only want 1
                     BlobGoalCenter.append(BlobGoal[i])
 
-            if np.shape(BlobGoalCenter)[0] == 1:
-                goal = np.array([fieldLengthP - BlobGoalCenter[0][0], BlobGoalCenter[0][1]])
-                return goal.astype(np.float) * fieldWidthM / fieldWidthP
+            if np.shape(BlobGoalCenter)[0] == 1: # if only one blob, the center is found and the position computed
+                goal = np.array([fieldLengthP - BlobGoalCenter[0][0], BlobGoalCenter[0][1]]) # inverting the x axis for the other modules
+                return goal.astype(np.float) * fieldWidthM / fieldWidthP # conversion of the goal position to meters
     except:
         #clear_output(wait=True)
         #print("Goal can not be found")
@@ -139,41 +160,56 @@ def goalFetch(videoFeed):
 
 # Fetching terrain
 def terrainFetch(videoFeed, goalM):
-    goal = goalM * fieldWidthP / fieldWidthM
+    # conversion of the goal position to pixels
+    goal = goalM * fieldWidthP / fieldWidthM 
 
     frame = frameReader(videoFeed)
-
-    maskObs = cv2.inRange(frame, TLowObs, THighObs)
-    totalLabelsObs, labelIdObs, statsObs, BlobObs = cv2.connectedComponentsWithStats(maskObs, connectivity=8)
+    
+    # image segmentation for dark pixels (obstacle)
+    maskObs = cv2.inRange(frame, TLowObs, THighObs) 
+    totalLabelsObs, labelIdObs, statsObs, BlobObs = cv2.connectedComponentsWithStats(maskObs, connectivity=8) # blob analysis
     maskObs = np.zeros(maskObs.shape, dtype="uint8")
-
-    for i in range(1, totalLabelsObs):  # Getting rid of the noise on our mask
+    
+    # Getting rid of the noise on our mask
+    for i in range(1, totalLabelsObs):  
         areaBlobObs = statsObs[i, cv2.CC_STAT_AREA]
-
+        
+         # filtering the blobs by area (the obstacle have a minimum size)
         if (areaBlobObs > 3000) and (areaBlobObs < 10000):
             componentMask = (labelIdObs == i).astype("uint8") * 255
             maskObs = cv2.bitwise_or(maskObs, componentMask)
-
+    
+    # mask dilatation to take the robot's size into account
     maskObsDilated = cv2.dilate(maskObs, SE, iterations=23)
     maskObsMargin = cv2.dilate(maskObsDilated, SE, iterations=5)
-
+    
+    # finding the dilated obsacles' corners
     dst = cv2.cornerHarris(maskObsMargin, 20, 3, 0.04)  # Fetching the angles
     blobCorner = np.zeros(frame.shape[:2], 'uint8')
     blobCorner[dst > 0.04 * dst.max()] = 1
-
+    
+    # nodes are the center of the dilated obsacles' corners 
     _, _, _, nodes = cv2.connectedComponentsWithStats(blobCorner, connectivity=8)
 
     odo = odoFetch(videoFeed)
+    # adding position to nodes, and reconverting x wrt the image origin
     nodes = np.append(nodes, [[fieldLengthP - odo[0], odo[1]]], axis=0)
+    # adding goal to nodes, and reconverting x wrt the image origin
     nodes = np.append(nodes, [[fieldLengthP - goal[0], goal[1]]], axis=0)
     nodes = np.rint(nodes[1:]).astype(np.int32)
-
+    
+    # matrix saving the nodes connection
     linkMat = np.ones((nodes.shape[0], nodes.shape[0]))
-
+    
+    
+    # iteration over every node
     for i in range(nodes.shape[0]):
+        # iteration over all the nodes with index > i
         for j in range(i + 1, nodes.shape[0]):
+            
+            # computing if the distance in Y between 2 nodes is bigger than distance in X
             rangeYbigger = abs(nodes[i, 1] - nodes[j, 1]) > abs(nodes[i, 0] - nodes[j, 0])
-
+            
             if ((rangeYbigger and (nodes[i, 1] > nodes[j, 1])) or
                     (not (rangeYbigger) and (nodes[i, 0] > nodes[j, 0]))):
                 node1, node2 = nodes[j, :], nodes[i, :]
