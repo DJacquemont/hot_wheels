@@ -260,7 +260,7 @@ class MotionControl:
         
         # if the sensors detect something, we follow the local avoidance algorithme
         prox = prox[0:5]
-        if any(prox) & self.state == 'global':
+        if any(prox) & (self.state == 'global'):
             self.init_local_angle = ori
             self.state = 'local_pivot'
 
@@ -281,10 +281,12 @@ class MotionControl:
                 self.init_local_angle = ori
                 self.state = 'local_pivot'
             else:
+
                 angle_off = ori - self.init_local_angle
                 angle_off = angle_off if (angle_off > -np.pi) and (angle_off < np.pi) else \
                         angle_off - 2 * np.pi if (angle_off > np.pi) else \
                         angle_off + 2 * np.pi
+                        
                 if angle_off < 0:
                     self.state == 'global'
                     try :
