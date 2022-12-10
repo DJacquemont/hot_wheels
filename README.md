@@ -1,4 +1,4 @@
-# Mobile Robotics - Thymio Path Finder Project
+Hot-Wheels - Thymio Path Finder Project (Mobile Robotics) 
 ##### _The best vision based path findind program for Thymio_
 ***
 
