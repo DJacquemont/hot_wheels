@@ -106,7 +106,7 @@ class Trajectory:
         self.total_len = np.sum([points[idx].dist(points[idx+1]) for idx in range(len(points)-1)])
                 
 class MotionControl:
-    def __init__(self, traj, x_pos, y_pos, angle, nodes, nodeCon, maskObsDilated, goal, err_dist=3, err_angle=np.pi/5
+    def __init__(self, traj, x_pos, y_pos, angle, nodes, nodeCon, maskObsDilated, goal, err_dist=2, err_angle=np.pi/8
     ):
         '''
         The MotionControl class allows to compute the speed of the wheel motors, it has:
@@ -161,7 +161,7 @@ class MotionControl:
         # TUNE PARAMETERS
         K_dist = 0.04
         K_ori = 2
-        speed_offset = 3 # [cm/s]
+        speed_offset = 5 # [cm/s]
 
         self.l_speed = SPEED_RATIO * (speed_offset + K_dist*dist_off - K_ori*angle_off) #go faster if angle is negative
         self.r_speed = SPEED_RATIO * (speed_offset + K_dist*dist_off + K_ori*angle_off) #go faster if angle is positive
@@ -216,30 +216,31 @@ class MotionControl:
             else:
                 self.move_fwd(next_point)   # else go forward the next point
 
-    def update_local(self, prox):
-        '''
-        Updates the speed of the the robot wheels using the position of the robots in case we are in a LOCAL path search
+    def update_local_pivot(self):
+        ''' 
+        Local pivot function: gives instructions for the robot to pivot left
         Inputs:
-            sensors - front sensors on the thymio [aseba unit]
+            None
         Outputs:
-            l_speed - speed for the left motor [aseba unit]
-            r_speed - speed for the right motor [aseba unit]
-        '''
-        lspeed_os = 30
-        rspeed_os = 30
-        yl = 0
-        yr = 0
-        wl = [-1,-1,-1,-1,-0.25]
-        wr = [+2,+2,+1.5,+1,+0.5]
+            l_speed - speed for left motor [aseba unit]
+            r_speed - speed for right motor [aseba unit]
 
-        prox = prox[0:5]
-        for i in range(5):
-            # Compute outputs of neurons and set motor powers
-            yl += prox[i]//50 * wl[i]
-            yr += prox[i]//50 * wr[i]
-            
-        self.l_speed = yl + lspeed_os   # update the speed of the wheels
-        self.r_speed = yr + rspeed_os
+        '''
+        self.l_speed = -30
+        self.r_speed = +30
+
+    def update_local_fwd(self):
+        ''' 
+        Local pivot function: gives instructions for the robot to turn right during the local avoidance
+        Inputs:
+            None
+        Outputs:
+            l_speed - speed for left motor [aseba unit]
+            r_speed - speed for right motor [aseba unit]
+
+        '''
+        self.l_speed = +60
+        self.r_speed = +60
 
     def update_motion(self, x_pos, y_pos, ori, prox, vid):
         '''
@@ -259,26 +260,42 @@ class MotionControl:
         
         # if the sensors detect something, we follow the local avoidance algorithme
         prox = prox[0:5]
-        if any(prox):
-            self.state = 'local'
-            self.update_local(prox)
+        if any(prox) & (self.state == 'global'):
+            self.init_local_angle = ori
+            self.init_local_pos = Node(0,x_pos,y_pos)
+            self.state = 'local_pivot'
 
-        # if the sensors dont detect anything, follow global algorithme
-        else:
-            # if we just left the local avoidance algorithm, then we have to update the optimal path
-            # before reseting the position index and turning back to the global algorithm
-            if self.state == 'local':
+        if self.state == 'local_pivot':
+            if any(prox):
+                self.update_local_pivot()
+            else:
+                self.state = 'local_fwd'
+
+        if self.state == 'local_fwd':
+            print(self.init_local_pos.x,self.init_local_pos.y)
+            print(self.robot_pos.x,self.robot_pos.y)
+            
+            if self.init_local_pos.dist(self.robot_pos) < 15:
+                if any(prox):
+                    self.init_local_angle = ori
+                    self.init_local_pos = Node(0,x_pos,y_pos)
+                    self.state = 'local_pivot'
+                else:
+                    self.update_local_fwd()
+            else:
+                self.state = 'global'
                 try :
                     self.nodes, self.nodeCon, self.maskObsDilated, optimal_path = gn.opt_path(vid, self.goal)
                     self.optimal_path = optimal_path*100
+                    self.opt_traj = Trajectory([])
+                    i=0
+                    for pos in self.optimal_path:
+                        self.opt_traj.points = np.append(self.opt_traj.points, Node(i,pos[0],pos[1]))
+                        i+=1
+                    self.robot_pos.id = 0
                 except:
                     print("Skipped optimal path update")
 
-                self.opt_traj = Trajectory([])
-                i=0
-                for pos in self.optimal_path:
-                    self.opt_traj.points = np.append(self.opt_traj.points, Node(i,pos[0],pos[1]))
-                    i+=1
-                self.robot_pos.id = 0
-            self.state = 'global'
+        # if the sensors dont detect anything, follow global algorithme
+        if self.state == 'global':
             self.update_global()
