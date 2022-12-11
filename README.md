@@ -22,7 +22,7 @@ Those modules are further detailed bellow:
 4. [Motion control](#4-motion-control)
     - [Thymio's bivalent behavior](#41-thymios-bivalent-behavior)
     - [Global path following](#42-global-path-following)
-    - [Local avoidance](#local-avoidance)
+    - [Local avoidance](#43-local-avoidance)
 5. [Demo](#5-demo)
 
 ## 1. Vision
