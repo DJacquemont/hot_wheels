@@ -1,5 +1,5 @@
 # Hot-Wheels - Thymio Path Finder Project (Mobile Robotics) 
-##### _The best vision based path findind program for Thymio_
+##### _The best vision based path findind program for Thymio, fasten your seat belts_
 ***
 
 ## Abstract
