@@ -215,15 +215,16 @@ The estimate of Thymio's state is performed through the following sequence of ca
 There three step are executed at each timestep and are the same for the position as well as the orientation kalman filter.
 
 ## Optimal Path Algorithm
-<div style="text-align: justify">T
+<br/>
+<div style="text-align: justify">
 To find the optimal path for the robot, we decide to implement Dijkstra’s algorithm on our project. The vision module extract all coordinates of nodes and edges from obstacles.  This data is sent thanks to the function <b>terrainFetch</b>. We run this function until detect the map correctly. This step is done on the function <b>opt_path </b>. When it’s done, we run the Dijkstra algorithm with our function <b>dijkstra </b>. We have created node and edges classes in order to have a better readability.
-
+<br/><br/>
 In this function, we initialize a list of nodes and another one with edges. Note that we have to duplicate edges to have both ways, because the vision module gives us only one way. Then, we define two lists to save the length of the path, and its coordinates of each node and one dictionary, which allows us to know the index of each node on its lists. 
-
+<br/> <br/>
 We initialise three variables to define the current situation (current node, distance between it and the starting point, all nodes of its path).  The <b>iteration </b> variable helps us to define the future node after each iteration.
-
+<br/> <br/>
 As long as the edges list isn’t empty, we calculate the distance between the start and end point of each edge having as starting point the current node. Then, we update the two array <b>tabLenpath </b> and <b>tabPath </b>. I remove all used edges and ones which, the end point is the current node. At the end, we updated the situation increasing iteration by one and updating the three variables. We have limited the iterations by putting a condition in the while loop, to avoid having an infinite loop, in case the goal is isolated.
-
+<br/> <br/>
 When edge list is empty, we extract the optimal path by tabPath and index of goal position. In order for the motion control module to be able to use the output correctly we transform the list into an array.
 </div>
 
