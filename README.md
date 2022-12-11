@@ -242,7 +242,7 @@ This FSM is implemented in the function **update_motion()** in the file **motion
  - **update_local_forward()** to move forward 15cm once the obstacle is not in the path anymore
 
 ### Global path following
-Because Thymio is a two-wheeled robot it can go strait forward by setting the right and left wheelspeed to the same value, and it can pivot by setting the wheel speed to opposite values. These are the two basic control movement we used to control our Thymio's global motion.
+Because Thymio is a two-wheeled robot it can go strait forward by setting the right and left wheelspeed to the same value, and it can pivot by setting the wheel speed to opposite values. For simplicity and robustness to path-following, these are the two basic control movements we used to control our Thymio's global motion.
 
 We have decided to use a proportional controller for both the forward and pivot motion: the further the robot's state from the desired one, the faster the movement.</div>
 | Motion | Inputs | Computes | Outputs |
@@ -250,8 +250,35 @@ We have decided to use a proportional controller for both the forward and pivot 
 | **Forward** | - Position of the robot, target point | - Distance to the target point | Wheel speed = $K \cdot d(robot,target) + C$|
 | **Pivot** | - Angle of the robot, target point | - Difference in angle between the robot and the target point | Wheel speed = $\pm K \cdot \alpha(robot,target) + C$|
 
+
 > It is important to note that the right and left wheel speeds differ a bit according the the angle between Thymio and the target point during the forward motion in order to track better the target. For example if the angle of Thymio is a bit off by $-\pi/8$ then the right wheel will be a bit faster than the left wheel.
 
+> The proportional terms K and the offset values C were set after some tries on hardware in order to track the target point at best without having the robot going too fast.
+
+<div style="text-align: justify">
 The below diagram explains what is the logic behind the optimal path following controller.
 
 ![Global path following](./img/GlobalPathFollowing.png "Optimal path following")
+
+### Local avoidance
+In case there is an non intended object on the pre-computed optimal path, Thymio cannot pass through and has to find a way to get around it.
+
+We've tried first to implement a neuronal network controller as in class, each sensor having a weight on the robot's wheels speed. However Thymio only has front sensors and couldn't detect if an object is on its side, which often resulted in the robot to blindly charge into the obstacle:
+
+![Neuronal network problem](./img/NeuronalNetwork.png "Blindly charge the obstacle")
+
+The other solution was to pivot the robot 90° left once he detect something on the sensors, then do a right arc until either the obstacle is detected again or if the robot faces the target point again.
+
+This solution wasn't successful as the robot's arc radius is highly dependant on the object's size and the robot often ended charhing the obstacle as in the previous method.
+
+Finally we decided to implement this final method. It's simple to implement and more robust than anything we tried before.
+
+```
+while sensors:
+    pivot left
+while no sensors:
+    go forward for 15 cm
+recompute optimal path
+```
+
+</div>
