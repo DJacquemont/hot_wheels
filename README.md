@@ -283,3 +283,11 @@ recompute optimal path
 ```
 
 </div>
+
+
+|                                    |                          |
+| ---------------------------------- | ------------------------ |
+| Description                        |                          |
+| Simulation                         | ![](./img/camera.gif)    |
+| Image Processing from Webcam       | ![](./img/feedback.gif)  |
+| Kalman filter display              | ![](./img/pygame.gif)    |
