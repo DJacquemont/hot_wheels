@@ -13,13 +13,15 @@
 Those modules are further detailed bellow:
 
 ## Table of contents
-
-1. [Vision](#vision)
-2. [Kalman Filter](#kalman-filter)
-3. [Optimal path algorithm](#optimal-path-algorithm)
-4. [Motion control](#motion-control)
-    - [Thymio's bivalent behavior](#thymios-bivalent-behavior)
-    - [Global path following](#global-path-following)
+1. [Vision](#1-vision)
+2. [Kalman Filter](#2-kalman-filter)
+    - [Position Kalman Filter](#21-position-kalman-filter)
+    - [Orientation kalman filter](#22-orientation-kalman-filter)
+    - [Kalman filter update squence](#23-kalman-filter-update-sequence)
+3. [Optimal path algorithm](#3-optimal-path-algorithm)
+4. [Motion control](#4-motion-control)
+    - [Thymio's bivalent behavior](#41-thymios-bivalent-behavior)
+    - [Global path following](#42-global-path-following)
 
 ## Vision
 
@@ -246,7 +248,7 @@ We have decided to use a proportional controller for both the forward and pivot 
 | Motion | Inputs | Computes | Outputs |
 |---:|---|---|---|
 | **Forward** | - Position of the robot, target point | - Distance to the target point | Wheel speed = $K \cdot d(robot,target) + C$|
-| **Pivot** | - Angle of the robot, target point | - Difference in angle between the robot and the target point | Wheel speed = $ \pm K \cdot \alpha(robot,target) + C$|
+| **Pivot** | - Angle of the robot, target point | - Difference in angle between the robot and the target point | Wheel speed = $\pm K \cdot \alpha(robot,target) + C$|
 
 > It is important to note that the right and left wheel speeds differ a bit according the the angle between Thymio and the target point during the forward motion in order to track better the target. For example if the angle of Thymio is a bit off by $-\pi/8$ then the right wheel will be a bit faster than the left wheel.
 
