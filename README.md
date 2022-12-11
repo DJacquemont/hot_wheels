@@ -290,6 +290,7 @@ recompute optimal path
 <div style="text-align: justify">
 This last part shows a simulation with three different views: the first one is an external camera shot, the second one is the real time feedback seen by the camera with the implementation of the vision and the optimal path and the last one is a plot used to observe the approximation of the robot position and its angle using the Kalmann filter
 <div>
+    
 |                                    |                          |
 | ---------------------------------- | ------------------------ |
 | Description                        |                          |
