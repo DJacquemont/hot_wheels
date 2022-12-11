@@ -231,12 +231,14 @@ As long as the edges list isn’t empty, we calculate the distance between the s
 When edge list is empty, we extract the optimal path by tabPath and index of goal position. In order for the motion control module to be able to use the output correctly we transform the list into an array.
 </div>
 
-## 4. Motion Control
+## 4.Motion Control
 
 ### 4.1 Thymio's bivalent behavior
 <div style="text-align: justify">The motion control part of the program takes care of both the global path following and the local object avoidance. Follows the finite state machine for the controller to go from the global to the local behavior. Each time the controller quits the local loop, a new optimal path is recomputed to avoid collisions with walls on the map.
 
-![FSM Global to local](./img/FSM-GlobalToLocal.png "Global to local behaviour FSM")
+<p align="center">
+<img src="./img/FSM-GlobalToLocal.png">
+</p>
 
 This FSM is implemented in the function `update_motion()` in the file [**motion_control.py**](motion_control.py) and is in charge of choosing which behavior to adopt to compute the update the wheels speed. Three functions are called :
  - `update_global()` to compute the wheels speed to follow the global optiml path
@@ -260,14 +262,18 @@ We have decided to use a proportional controller for both the forward and pivot 
 <div style="text-align: justify">
 The below diagram explains what is the logic behind the optimal path following controller.
 
-![Global path following](./img/GlobalPathFollowing.png "Optimal path following")
-
+<p align="center">
+<img src="./img/GlobalPathFollowing.png">
+</p>
+    
 ### 4.3 Local avoidance
 In case there is an non intended object on the pre-computed optimal path, Thymio cannot pass through and has to find a way to get around it.
 
-We've tried first to implement a neuronal network controller as in class, each sensor having a weight on the robot's wheels speed. However Thymio only has front sensors and couldn't detect if an object is on its side, which often resulted in the robot to blindly charge into the obstacle:
+We've tried first to implement a neuronal network controller as done in class, each sensor having a weight on the robot's wheels speed. However Thymio only has front sensors and couldn't detect if an object is on its side, which often resulted in the robot to blindly charge into the obstacle:
 
-![Neuronal network problem](./img/NeuronalNetwork.png "Blindly charge the obstacle")
+<p align="center">
+<img src="./img/NeuronalNetwork.png">
+</p>
 
 The other solution was to pivot the robot 90° left once he detect something on the sensors, then do a right arc until either the obstacle is detected again or if the robot faces the target point again.
 
@@ -284,6 +290,22 @@ recompute optimal path
 ```
 
 </div>
+
+
+## 5.Demo 
+
+
+This last part shows a simulation with three different views: the first one is an external camera shot, the second one is the real time feedback seen by the camera with the implementation of the vision and the optimal path and the last one is a plot used to observe the approximation of the robot position and its angle using the Kalmann filter 
+<br>
+<p align="center">
+
+| Description                        | Video                    |
+| ---------------------------------- | ------------------------ |
+| Simulation from external camera    | ![](./img/camera.gif)    |
+| Image Processing from Webcam       | ![](./img/feedback.gif)  |
+| Kalman filter display              | ![](./img/pygame.gif)    |
+    
+</p>
 
 ## 5. Demo
 <br>
