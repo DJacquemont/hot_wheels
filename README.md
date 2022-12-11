@@ -22,6 +22,7 @@ Those modules are further detailed bellow:
 4. [Motion control](#4-motion-control)
     - [Thymio's bivalent behavior](#41-thymios-bivalent-behavior)
     - [Global path following](#42-global-path-following)
+    - [Local avoidance](#local-avoidance)
 
 ## Vision
 
@@ -269,7 +270,7 @@ We've tried first to implement a neuronal network controller as in class, each s
 
 The other solution was to pivot the robot 90° left once he detect something on the sensors, then do a right arc until either the obstacle is detected again or if the robot faces the target point again.
 
-This solution wasn't successful as the robot's arc radius is highly dependant on the object's size and the robot often ended charhing the obstacle as in the previous method.
+This solution wasn't successful as the robot's arc radius is highly dependant on the object's size and the robot often ended charging the obstacle as in the previous method.
 
 Finally we decided to implement this final method. It's simple to implement and more robust than anything we tried before.
 
