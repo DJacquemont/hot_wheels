@@ -292,9 +292,8 @@ This last part shows a simulation with three different views: the first one is a
 <div>
 <br>
     
-|                                    |                          |
+| Description                        | Video                    |
 | ---------------------------------- | ------------------------ |
-| Description                        |                          |
 | Simulation from external camera    | ![](./img/camera.gif)    |
 | Image Processing from Webcam       | ![](./img/feedback.gif)  |
 | Kalman filter display              | ![](./img/pygame.gif)    |
