@@ -22,10 +22,10 @@ Those modules are further detailed bellow:
 4. [Motion control](#4-motion-control)
     - [Thymio's bivalent behavior](#41-thymios-bivalent-behavior)
     - [Global path following](#42-global-path-following)
-    - [Local avoidance](#43-local-avoidance)
+    - [Local avoidance](#local-avoidance)
 5. [Demo](#5-demo)
 
-## 1. Vision
+## Vision
 
 This module includes functions converting the information percieved by the camera into a map, a goal and the current position of the robot. To this end, the image obtained from the camera is first filtered using a median filter, useful to remove the noise while preserving clear edges.
 
@@ -41,13 +41,13 @@ In order to get a visual feedback on what the algorithm outputs, function <b>liv
 <img src="img/ThymioRun.png" width="564" height="400">
 </p>
 
-## 2. Kalman Filter
+## Kalman Filter
 
 The state of the Thymio is estimated using a Kalman filter. The choice for a kalman filter was made because we decided for the global navigation to use nodes described in a coordinate system with x and y coordinates. Thus, also the position of the Thymio should be estimated in that coordinate system. Since we have multiple sensor readings: vision and wheel encoder, the Kalman filter was selected to fuse these measurements.
 
 Since the position dynamics are independent of the orientation dynamics, two Kalman filters are used. Both are initialized using a vision measurement.
 
-### 2.1 Position Kalman Filter
+### Position Kalman Filter
 The dynamic system used for the position estimation:
 
 $$
@@ -130,7 +130,7 @@ The variance matrix $W$ corresponds to the process noise term $\boldsymbol{w}_k$
 The output covariance matrix $V_1$ was chosen to have 0.0001 on its diagonal since this corresponds to a standard deviation of 0.01m or an uncertainty of 1cm in the position measurement. The output covariance matrix $V_2$ was chose to have 0.01 on its diagonal since this corresponds to a standard deviation of 0.1m/s or an uncertainty of 10cm/s in the angular velocity measurement.
 
 
-### 2.2 Orientation Kalman Filter
+### Orientation Kalman Filter
 The dynamic system used for the orientation estimation:
 
 $$
@@ -200,7 +200,7 @@ The variance matrix $W$ corresponds to the process noise term $\boldsymbol{w}_k$
 
 The output covariance matrix $V_1$ was chosen to have 0.0001 since this corresponds to a standard deviation of 0.01rad or an uncertainty of 0.57deg in the orientation measurement. The output covariance matrix $V_2$ was chose to have 0.01 since this corresponds to a standard deviation of 0.1rad/s or an uncertainty of 5.7deg/s in the velocity measurement.
 
-### 2.3 Kalman filter update sequence
+### Kalman filter update sequence
 The estimate of Thymio's state is performed through the following sequence of calculations:
 1. prediction step
 - $\hat{x}_{k}^- = A\hat{x}_{k-1}^+$
@@ -218,7 +218,7 @@ The estimate of Thymio's state is performed through the following sequence of ca
 
 There three step are executed at each timestep and are the same for the position as well as the orientation kalman filter.
 
-## 3. Optimal Path Algorithm
+## Optimal Path Algorithm
 <div style="text-align: justify">
 To find the optimal path for the robot, we decide to implement Dijkstra’s algorithm on our project. The vision module extract all coordinates of nodes and edges from obstacles.  This data is sent thanks to the function <b>terrainFetch</b>. We run this function until detect the map correctly. This step is done on the function <b>opt_path </b>. When it’s done, we run the Dijkstra algorithm with our function <b>dijkstra </b>. We have created node and edges classes in order to have a better readability.
 <br/><br/>
@@ -231,9 +231,9 @@ As long as the edges list isn’t empty, we calculate the distance between the s
 When edge list is empty, we extract the optimal path by tabPath and index of goal position. In order for the motion control module to be able to use the output correctly we transform the list into an array.
 </div>
 
-## 4. Motion Control
+## Motion Control
 
-### 4.1 Thymio's bivalent behavior
+### Thymio's bivalent behavior
 <div style="text-align: justify">The motion control part of the program takes care of both the global path following and the local object avoidance. Follows the finite state machine for the controller to go from the global to the local behavior. Each time the controller quits the local loop, a new optimal path is recomputed to avoid collisions with walls on the map.
 
 ![FSM Global to local](./img/FSM-GlobalToLocal.png "Global to local behaviour FSM")
@@ -243,7 +243,7 @@ This FSM is implemented in the function `update_motion()` in the file [**motion_
  - `update_local_pivot()` to pivot left when an obstacle is detected
  - `update_local_fwd()` to move forward 15cm once the obstacle is not in the path anymore
 
-### 4.2 Global path following
+### Global path following
 Because Thymio is a two-wheeled robot it can go strait forward by setting the right and left wheelspeed to the same value, and it can pivot by setting the wheel speed to opposite values. For simplicity and robustness to path-following, these are the two basic control movements we used to control our Thymio's global motion.
 
 We have decided to use a proportional controller for both the forward and pivot motion: the further the robot's state from the desired one, the faster the movement.</div>
@@ -262,7 +262,7 @@ The below diagram explains what is the logic behind the optimal path following c
 
 ![Global path following](./img/GlobalPathFollowing.png "Optimal path following")
 
-### 4.3 Local avoidance
+### Local avoidance
 In case there is an non intended object on the pre-computed optimal path, Thymio cannot pass through and has to find a way to get around it.
 
 We've tried first to implement a neuronal network controller as in class, each sensor having a weight on the robot's wheels speed. However Thymio only has front sensors and couldn't detect if an object is on its side, which often resulted in the robot to blindly charge into the obstacle:
@@ -289,8 +289,8 @@ recompute optimal path
 <br>
 <div style="text-align: justify">
 This last part shows a simulation with three different views: the first one is an external camera shot, the second one is the real time feedback seen by the camera with the implementation of the vision and the optimal path and the last one is a plot used to observe the approximation of the robot position and its angle using the Kalmann filter
-</div>
-<br>
+<div>
+    
 |                                    |                          |
 | ---------------------------------- | ------------------------ |
 | Description                        |                          |
