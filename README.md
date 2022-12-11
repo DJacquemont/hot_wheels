@@ -14,10 +14,12 @@ Those modules are further detailed bellow:
 
 ## Table of contents
 
-1. [Vision](#Vision)
-2. [Kalman Filter](#Kalman-Filter)
-3. [Optimal path algorithm](#Global-Navigation)
-4. [Motion control](#Motion-Control)
+1. [Vision](#vision)
+2. [Kalman Filter](#kalman-filter)
+3. [Optimal path algorithm](#optimal-path-algorithm)
+4. [Motion control](#motion-control)
+    - [Thymio's bivalent behavior](#thymios-bivalent-behavior)
+    - [Global path following](#global-path-following)
 
 ## Vision
 
