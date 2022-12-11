@@ -332,15 +332,36 @@ def liveFeedback(videoFeed, nodesM, nodeCon, maskObsDilated, optPathM):
 # Fetching pose in meters
 def fetchPoseMeters(videoFeed, n=5):
     i = 0
+    # Checking a number of time for the position
+    # in case it is not found the first time
     while (i < n):
         try:
+            # Fetching pose
             posePix = poseFetch(videoFeed)
-            poseMet = posePix[:2] * fieldWidthM / fieldWidthP
+            # Conversion of the pose to meters
+            poseMet = posePix[:2] * fieldWidthM / fieldWidthP 
         except:
             pass
         else:
             return np.array([poseMet[0], poseMet[1]]), np.array([posePix[2]])
         i += 1
     raise TypeError("Can not find poseM")
+
+
+# Pose Test Demo
+def poseTest(videoFeed, frame):
+    
+    pose = poseFetch(videoFeed)
+    pos = np.rint(pose[:2]).astype(np.int32)
+    pos[0] = fieldLengthP - pos[0]
+    angle = math.pi - pose[2]
+    output = cv2.circle(frame, pos, 5, (0, 0, 255), -1)
+
+    endLX = pos[0] + np.rint(40 * math.cos(angle))
+    endLY = pos[1] + np.rint(40 * math.sin(angle))
+    endL = np.array([endLX, endLY]).astype(np.int32)
+    output = cv2.line(output, pos, endL, (0, 255, 0), 3)
+    
+    return output
 
 
