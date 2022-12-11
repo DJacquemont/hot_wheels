@@ -71,10 +71,10 @@ def dijkstra(inputNodes,inputEdges,index_goal):
     tabIndex = {(k.x,k.y): v for v, k in enumerate(Nodes)}
 
     #Initial condition
+
     act_node = Nodes[-2]
     act_dist = 0
     act_path = [act_node]
-    #act_path = [Nodes[-2]]
     iteration = 0
     #Check if all edges are used
     while(len(Edges) != 0 and iteration<200):
@@ -113,7 +113,6 @@ def dijkstra(inputNodes,inputEdges,index_goal):
         iteration += 1
         min_dist = heapq.nsmallest(iteration,tabLenPath)
         min_dist = min_dist[-1]
-        #idx_min  = int(np.where(tabLenPath == min_dist)[0])
         idx_min = tabLenPath.index(min_dist)
         act_dist = tabLenPath[idx_min]
         act_node = Nodes[idx_min]
