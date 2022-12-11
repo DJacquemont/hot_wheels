@@ -9,9 +9,6 @@ class Point:
     def __init__(self,x,y):
         self.x = x
         self.y = y
-    def get_coordinates(self):
-        coordinates = [self.x,self.y]
-        return coordinates
     
 class Edge:
     def __init__(self,x1 = 0,y1= 0,x2= 0,y2=0):
@@ -32,11 +29,6 @@ class Edge:
             return 1
         else:
             return 0
-    
-        
-    def get_coordinates(self):
-        coordinates = [self.start.x,self.start.y,self.end.x,self.end.y]
-        return coordinates
 
 def initNodes(inputN):
 
@@ -62,13 +54,11 @@ def dijkstra(inputNodes,inputEdges,index_goal):
     #Initilization of objects and tab
     Edges = initEdges(inputNodes,inputEdges)
     Nodes = initNodes(inputNodes)
-    #tabLenPath = np.empty(len(Nodes), dtype=float) 
-    #tabLenPath[:] = float('inf')
     tabLenPath = len(Nodes)*[float('inf')]
     tabPath = [ [] for _ in range(len(Nodes))]
     tabIndex = {(k.x,k.y): v for v, k in enumerate(Nodes)}
 
-    #Initial condition
+    #Initial condition index -2 represents the index of the starting node 
 
     act_node = Nodes[-2]
     act_dist = 0
