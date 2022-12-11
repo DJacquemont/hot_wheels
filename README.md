@@ -23,6 +23,7 @@ Those modules are further detailed bellow:
     - [Thymio's bivalent behavior](#41-thymios-bivalent-behavior)
     - [Global path following](#42-global-path-following)
     - [Local avoidance](#local-avoidance)
+5. [Demo](#5-demo)
 
 ## Vision
 
@@ -283,3 +284,11 @@ recompute optimal path
 ```
 
 </div>
+
+## Demo
+|                                    |                          |
+| ---------------------------------- | ------------------------ |
+| Description                        |                          |
+| Simulation                         | ![](./img/camera.gif)    |
+| Image Processing from Webcam       | ![](./img/feedback.gif)  |
+| Kalman filter display              | ![](./img/pygame.gif)    |
