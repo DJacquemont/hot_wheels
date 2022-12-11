@@ -215,7 +215,6 @@ The estimate of Thymio's state is performed through the following sequence of ca
 There three step are executed at each timestep and are the same for the position as well as the orientation kalman filter.
 
 ## Optimal Path Algorithm
-<br/>
 <div style="text-align: justify">
 To find the optimal path for the robot, we decide to implement Dijkstra’s algorithm on our project. The vision module extract all coordinates of nodes and edges from obstacles.  This data is sent thanks to the function <b>terrainFetch</b>. We run this function until detect the map correctly. This step is done on the function <b>opt_path </b>. When it’s done, we run the Dijkstra algorithm with our function <b>dijkstra </b>. We have created node and edges classes in order to have a better readability.
 <br/><br/>
