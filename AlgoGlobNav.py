@@ -50,11 +50,9 @@ def initEdges(inputN,inputE):
     
     for i in range(len(inputE)):
         Edges[2*i] = Edge(inputN[inputE[i][0]][0],inputN[inputE[i][0]][1],
-                    inputN[inputE[i][1]][0],inputN[inputE[i][1]][1])
+                     inputN[inputE[i][1]][0],inputN[inputE[i][1]][1])
         Edges[2*i+1] =Edge(inputN[inputE[i][1]][0],inputN[inputE[i][1]][1],
-                         inputN[inputE[i][0]][0],inputN[inputE[i][0]][1])
-
-
+                           inputN[inputE[i][0]][0],inputN[inputE[i][0]][1])
 
     return Edges
 
