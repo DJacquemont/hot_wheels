@@ -226,14 +226,22 @@ When edge list is empty, we extract the optimal path by tabPath and index of goa
 
 ## Motion Control
 
-Because Thymio is a two-wheeled robot it can go strait forward by setting the right and left wheelspeed to the same value, and it can pivot by setting the wheel speed to opposite values. These are the two basic control movement we used to control our Thymio's motion.
+### Thymio's bivalent behavior
+<div style="text-align: justify">The motion control part of the program takes care of both the global path following and the local object avoidance. Follows the finite state machine for the controller to go from the global to the local behavior. Each time the controller quits the local loop, a new optimal path is recomputed to avoid collisions with walls on the map.
 
-We have decided to use a proportional controller for both the forward and pivot motion: the further the robot's state from the desired state, the faster the movement.
+![FSM Global to local](./img/FSM-GlobalToLocal.png "Global to local behaviour FSM")
+
+### Global path following
+Because Thymio is a two-wheeled robot it can go strait forward by setting the right and left wheelspeed to the same value, and it can pivot by setting the wheel speed to opposite values. These are the two basic control movement we used to control our Thymio's global motion.
+
+We have decided to use a proportional controller for both the forward and pivot motion: the further the robot's state from the desired one, the faster the movement.</div>
 | Motion | Inputs | Computes | Outputs |
 |---:|---|---|---|
-| **Forward** | - Position of the robot, target point | - Distance to the target point | Wheel speed = $K * d + C$|
-| **Pivot** | - Angle of the robot, target point | - Difference in angle between the robot and the target point | Wheel speed = $ \pm K \cdot \alpha_{diff} + C$|
+| **Forward** | - Position of the robot, target point | - Distance to the target point | Wheel speed = $K \cdot d(robot,target) + C$|
+| **Pivot** | - Angle of the robot, target point | - Difference in angle between the robot and the target point | Wheel speed = $ \pm K \cdot \alpha(robot,target) + C$|
 
 > It is important to note that the right and left wheel speeds differ a bit according the the angle between Thymio and the target point during the forward motion in order to track better the target. For example if the angle of Thymio is a bit off by $-\pi/8$ then the right wheel will be a bit faster than the left wheel.
 
-We have designed a finite state machine as follows to decide what movement Thymio should follow.
+The below diagram explains what is the logic behind the optimal path following controller.
+
+![Global path following](./img/GlobalPathFollowing.png "Optimal path following")
